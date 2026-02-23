@@ -43,6 +43,8 @@
     --status-draft-bg: 38 92% 95%;
     --status-review: 213 94% 52%;
     --status-review-bg: 213 94% 95%;
+    --status-approved: 262 60% 50%;
+    --status-approved-bg: 262 60% 95%;
 
     /* Sidebar */
     --sidebar-background: 234 45% 13%;

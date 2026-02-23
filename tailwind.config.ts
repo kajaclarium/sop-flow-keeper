@@ -68,6 +68,8 @@ export default {
           "draft-bg": "hsl(var(--status-draft-bg))",
           review: "hsl(var(--status-review))",
           "review-bg": "hsl(var(--status-review-bg))",
+          approved: "hsl(var(--status-approved))",
+          "approved-bg": "hsl(var(--status-approved-bg))",
         },
       },
       borderRadius: {
