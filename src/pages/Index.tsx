@@ -1,14 +1,27 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { SOPProvider, useSOP } from "@/contexts/SOPContext";
+import { TopBar } from "@/components/sop/TopBar";
+import { SOPList } from "@/components/sop/SOPList";
+import { SOPEditor } from "@/components/sop/SOPEditor";
+import { SOPViewer } from "@/components/sop/SOPViewer";
 
-const Index = () => {
+function SOPApp() {
+  const { currentView } = useSOP();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="flex flex-col min-h-screen w-full">
+      <TopBar />
+      {currentView === "list" && <SOPList />}
+      {currentView === "create" && <SOPEditor mode="create" />}
+      {currentView === "edit" && <SOPEditor mode="edit" />}
+      {currentView === "view" && <SOPViewer />}
     </div>
   );
-};
+}
 
-export default Index;
+export default function Index() {
+  return (
+    <SOPProvider>
+      <SOPApp />
+    </SOPProvider>
+  );
+}
