@@ -17,10 +17,10 @@ const INITIAL_SOPS: SOPRecord[] = [
     effectiveDate: "2026-01-15",
     createdAt: "2025-08-10",
     steps: [
-      { id: "s1", instruction: "Prepare cleaning solution according to MSDS guidelines.", requirePhoto: false, requireMeasurement: true },
-      { id: "s2", instruction: "Begin with high-touch surfaces: door handles, light switches, railings.", requirePhoto: true, requireMeasurement: false },
-      { id: "s3", instruction: "Mop floors using approved disinfectant. Allow 10-minute dwell time.", requirePhoto: false, requireMeasurement: true },
-      { id: "s4", instruction: "Document completion and any anomalies in the facility log.", requirePhoto: true, requireMeasurement: false },
+      { id: "s1", instruction: "Prepare cleaning solution according to MSDS guidelines.", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: true },
+      { id: "s2", instruction: "Begin with high-touch surfaces: door handles, light switches, railings.", requirePhoto: true, requireEvidenceFile: false, requireMeasurement: false },
+      { id: "s3", instruction: "Mop floors using approved disinfectant. Allow 10-minute dwell time.", requirePhoto: false, requireEvidenceFile: true, requireMeasurement: true },
+      { id: "s4", instruction: "Document completion and any anomalies in the facility log.", requirePhoto: true, requireEvidenceFile: false, requireMeasurement: false },
     ],
     versions: [
       { version: "v1.0", createdAt: "2025-08-10", createdBy: "Sarah Chen", status: "Effective", steps: [] },
@@ -58,9 +58,9 @@ const INITIAL_SOPS: SOPRecord[] = [
     effectiveDate: null,
     createdAt: "2026-02-01",
     steps: [
-      { id: "s1", instruction: "Identify and classify the incident severity (Critical, Major, Minor).", requirePhoto: false, requireMeasurement: false },
-      { id: "s2", instruction: "Notify the incident commander and assemble the response team.", requirePhoto: false, requireMeasurement: false },
-      { id: "s3", instruction: "Contain the incident and document initial findings with photos.", requirePhoto: true, requireMeasurement: false },
+      { id: "s1", instruction: "Identify and classify the incident severity (Critical, Major, Minor).", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false },
+      { id: "s2", instruction: "Notify the incident commander and assemble the response team.", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false },
+      { id: "s3", instruction: "Contain the incident and document initial findings with photos.", requirePhoto: true, requireEvidenceFile: true, requireMeasurement: false },
     ],
     versions: [
       { version: "v1.0", createdAt: "2026-02-01", createdBy: "Emily Park", status: "In Review", steps: [] },
@@ -78,8 +78,8 @@ const INITIAL_SOPS: SOPRecord[] = [
     effectiveDate: null,
     createdAt: "2026-02-10",
     steps: [
-      { id: "s1", instruction: "Categorize waste type per EPA classification.", requirePhoto: false, requireMeasurement: true },
-      { id: "s2", instruction: "Use appropriate PPE and containment vessels.", requirePhoto: true, requireMeasurement: false },
+      { id: "s1", instruction: "Categorize waste type per EPA classification.", requirePhoto: false, requireEvidenceFile: true, requireMeasurement: true },
+      { id: "s2", instruction: "Use appropriate PPE and containment vessels.", requirePhoto: true, requireEvidenceFile: false, requireMeasurement: false },
     ],
     versions: [
       { version: "v0.1", createdAt: "2026-02-10", createdBy: "James Rodriguez", status: "Draft", steps: [] },
@@ -115,9 +115,9 @@ const INITIAL_SOPS: SOPRecord[] = [
     effectiveDate: "2026-02-01",
     createdAt: "2025-03-10",
     steps: [
-      { id: "s1", instruction: "Verify all critical databases are included in the backup scope.", requirePhoto: false, requireMeasurement: false },
-      { id: "s2", instruction: "Run incremental backup and verify checksums.", requirePhoto: false, requireMeasurement: true },
-      { id: "s3", instruction: "Test recovery on staging environment. Record RTO/RPO metrics.", requirePhoto: true, requireMeasurement: true },
+      { id: "s1", instruction: "Verify all critical databases are included in the backup scope.", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false },
+      { id: "s2", instruction: "Run incremental backup and verify checksums.", requirePhoto: false, requireEvidenceFile: true, requireMeasurement: true },
+      { id: "s3", instruction: "Test recovery on staging environment. Record RTO/RPO metrics.", requirePhoto: true, requireEvidenceFile: true, requireMeasurement: true },
     ],
     versions: [
       { version: "v1.0", createdAt: "2025-03-10", createdBy: "David Kim", status: "Effective", steps: [] },
@@ -133,7 +133,7 @@ interface SOPContextType {
   selectedSopId: string | null;
   setCurrentView: (view: AppView) => void;
   selectSop: (id: string | null) => void;
-  createSop: (title: string, format: SOPFormat, owner: string) => string;
+  createSop: (title: string, format: SOPFormat, owner: string, steps?: SOPStep[]) => string;
   updateSop: (id: string, updates: Partial<SOPRecord>) => void;
   deleteSop: (id: string) => void;
   transitionStatus: (id: string, newStatus: SOPStatus) => void;
@@ -162,9 +162,12 @@ export function SOPProvider({ children }: { children: React.ReactNode }) {
     return sops.find((s) => s.id === selectedSopId);
   }, [sops, selectedSopId]);
 
-  const createSop = useCallback((title: string, format: SOPFormat, owner: string) => {
+  const createSop = useCallback((title: string, format: SOPFormat, owner: string, steps?: SOPStep[]) => {
     const id = generateId();
     const now = new Date().toISOString().split("T")[0];
+    const defaultSteps = format === "block"
+      ? [{ id: generateStepId(), instruction: "", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false }]
+      : [];
     const newSop: SOPRecord = {
       id,
       title,
@@ -176,7 +179,7 @@ export function SOPProvider({ children }: { children: React.ReactNode }) {
       status: "Draft",
       effectiveDate: null,
       createdAt: now,
-      steps: format === "block" ? [{ id: generateStepId(), instruction: "", requirePhoto: false, requireMeasurement: false }] : [],
+      steps: steps && steps.length > 0 ? steps : defaultSteps,
       versions: [{ version: "v0.1", createdAt: now, createdBy: owner, status: "Draft", steps: [] }],
     };
     setSops((prev) => [newSop, ...prev]);
@@ -230,7 +233,7 @@ export function SOPProvider({ children }: { children: React.ReactNode }) {
     setSops((prev) =>
       prev.map((s) =>
         s.id === sopId
-          ? { ...s, steps: [...s.steps, { id: generateStepId(), instruction: "", requirePhoto: false, requireMeasurement: false }] }
+          ? { ...s, steps: [...s.steps, { id: generateStepId(), instruction: "", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false }] }
           : s
       )
     );
@@ -281,25 +284,10 @@ export function SOPProvider({ children }: { children: React.ReactNode }) {
   return (
     <SOPContext.Provider
       value={{
-        sops,
-        currentView,
-        selectedSopId,
-        setCurrentView,
-        selectSop,
-        createSop,
-        updateSop,
-        deleteSop,
-        transitionStatus,
-        createNewVersion,
-        addStep,
-        updateStep,
-        removeStep,
-        reorderSteps,
-        getSelectedSop,
-        navigateToCreate,
-        navigateToEdit,
-        navigateToView,
-        navigateToList,
+        sops, currentView, selectedSopId, setCurrentView, selectSop,
+        createSop, updateSop, deleteSop, transitionStatus, createNewVersion,
+        addStep, updateStep, removeStep, reorderSteps, getSelectedSop,
+        navigateToCreate, navigateToEdit, navigateToView, navigateToList,
       }}
     >
       {children}

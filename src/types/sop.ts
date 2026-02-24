@@ -5,6 +5,7 @@ export interface SOPStep {
   id: string;
   instruction: string;
   requirePhoto: boolean;
+  requireEvidenceFile: boolean;
   requireMeasurement: boolean;
 }
 
