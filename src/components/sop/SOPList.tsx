@@ -5,34 +5,14 @@ import { SOPStatusBadge } from "./SOPStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Plus,
-  Search,
-  Eye,
-  Pencil,
-  Trash2,
-  FileText,
-  Blocks,
-  Lock,
-  Clock,
-  User,
-  ChevronDown,
+  Plus, Search, Eye, Pencil, Trash2, FileText, Blocks, Lock, Clock, User, ChevronDown,
 } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
@@ -83,12 +63,7 @@ export function SOPList() {
         <div className="flex items-center gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search SOPs…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
+            <Input placeholder="Search SOPs…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
           <div className="flex items-center gap-1.5">
             {STATUS_FILTERS.map((s) => (
@@ -97,9 +72,7 @@ export function SOPList() {
                 onClick={() => setStatusFilter(s)}
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
-                  statusFilter === s
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-accent"
+                  statusFilter === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
                 )}
               >
                 {s}
@@ -107,8 +80,7 @@ export function SOPList() {
             ))}
           </div>
           <Button onClick={navigateToCreate} className="gap-2 ml-auto">
-            <Plus className="h-4 w-4" />
-            Create SOP
+            <Plus className="h-4 w-4" /> Create SOP
           </Button>
         </div>
 
@@ -121,17 +93,19 @@ export function SOPList() {
             </div>
           ) : (
             filtered.map((sop) => {
-              const isLocked = sop.status === "Effective";
+              const isEffective = sop.status === "Effective";
+              // Check if this SOP has a newer version (i.e., it's superseded)
+              const isSuperseded = !isEffective && sop.versions.length > 1 && sop.versions.some(v => v.status === "Effective" && v.version !== sop.currentVersion);
               return (
                 <div
                   key={sop.id}
                   className={cn(
                     "flex items-center gap-4 px-5 py-4 rounded-xl border bg-card transition-all hover:shadow-sm cursor-pointer group",
-                    isLocked && "border-status-effective/20 bg-status-effective-bg/30"
+                    isEffective && "border-status-effective/30 bg-status-effective-bg/30 ring-1 ring-status-effective/10",
+                    isSuperseded && "opacity-50"
                   )}
                   onClick={() => navigateToView(sop.id)}
                 >
-                  {/* Format icon */}
                   <div className={cn(
                     "flex items-center justify-center h-9 w-9 rounded-lg shrink-0",
                     sop.format === "block" ? "bg-primary/10" : "bg-muted"
@@ -143,34 +117,28 @@ export function SOPList() {
                     )}
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-mono text-muted-foreground">{sop.id}</span>
-                      {isLocked && <Lock className="h-3 w-3 text-status-effective" />}
+                      {isEffective && <Lock className="h-3 w-3 text-status-effective" />}
                     </div>
-                    <p className="text-sm font-medium truncate">{sop.title}</p>
+                    <p className={cn("text-sm font-medium truncate", isSuperseded && "line-through text-muted-foreground")}>{sop.title}</p>
                   </div>
 
-                  {/* Owner */}
                   <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
-                    <User className="h-3 w-3" />
-                    {sop.owner}
+                    <User className="h-3 w-3" /> {sop.owner}
                   </div>
 
-                  {/* Version */}
-                  <span className="text-xs font-mono text-muted-foreground shrink-0">{sop.currentVersion}</span>
+                  <span className={cn("text-xs font-mono shrink-0", isEffective ? "text-status-effective font-semibold" : "text-muted-foreground")}>
+                    {sop.currentVersion}
+                  </span>
 
-                  {/* Status */}
                   <SOPStatusBadge status={sop.status} />
 
-                  {/* Date */}
                   <div className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground shrink-0 w-24">
-                    <Clock className="h-3 w-3" />
-                    {sop.effectiveDate || sop.createdAt}
+                    <Clock className="h-3 w-3" /> {sop.effectiveDate || sop.createdAt}
                   </div>
 
-                  {/* Actions */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="shrink-0 opacity-0 group-hover:opacity-100">
@@ -181,32 +149,25 @@ export function SOPList() {
                       <DropdownMenuItem onClick={() => navigateToView(sop.id)}>
                         <Eye className="h-4 w-4 mr-2" /> View
                       </DropdownMenuItem>
-                      {!isLocked && (
+                      {!isEffective && (
                         <DropdownMenuItem onClick={() => navigateToEdit(sop.id)}>
                           <Pencil className="h-4 w-4 mr-2" /> Edit
                         </DropdownMenuItem>
                       )}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <DropdownMenuItem
-                            onSelect={(e) => e.preventDefault()}
-                            className="text-destructive focus:text-destructive"
-                          >
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive">
                             <Trash2 className="h-4 w-4 mr-2" /> Delete
                           </DropdownMenuItem>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete {sop.id}?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will permanently delete "{sop.title}". This action cannot be undone.
-                            </AlertDialogDescription>
+                            <AlertDialogDescription>This will permanently delete "{sop.title}".</AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteSop(sop.id)}>
-                              Delete
-                            </AlertDialogAction>
+                            <AlertDialogAction onClick={() => deleteSop(sop.id)}>Delete</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>

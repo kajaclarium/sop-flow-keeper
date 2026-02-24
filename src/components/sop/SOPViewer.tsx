@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useSOP } from "@/contexts/SOPContext";
 import { SOPStatusBadge } from "./SOPStatusBadge";
 import { StatusWorkflow } from "./StatusWorkflow";
@@ -11,13 +12,14 @@ import {
   CheckCircle2,
   RotateCcw,
   Camera,
-  Hash,
+  Paperclip,
   FileText,
   Blocks,
   Clock,
   User,
   History,
   Sparkles,
+  Download,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -26,6 +28,38 @@ export function SOPViewer() {
   const { getSelectedSop, navigateToList, navigateToEdit, transitionStatus, createNewVersion } = useSOP();
   const { toast } = useToast();
   const sop = getSelectedSop();
+
+  const handleDownload = useCallback(() => {
+    if (!sop) return;
+    // Generate a text document from the SOP data
+    let content = `SOP: ${sop.id}\nTitle: ${sop.title}\nVersion: ${sop.currentVersion}\nStatus: ${sop.status}\nOwner: ${sop.owner}\nEffective Date: ${sop.effectiveDate || "N/A"}\n\n`;
+    content += "=" .repeat(60) + "\n\n";
+
+    if (sop.steps.length > 0) {
+      content += "PROCEDURE STEPS\n" + "-".repeat(40) + "\n\n";
+      sop.steps.forEach((step, i) => {
+        content += `Step ${i + 1}: ${step.instruction}\n`;
+        const evidence: string[] = [];
+        if (step.requirePhoto) evidence.push("Photo Required");
+        if (step.requireEvidenceFile) evidence.push("Evidence File Required");
+        if (evidence.length) content += `  Evidence: ${evidence.join(", ")}\n`;
+        content += "\n";
+      });
+    }
+
+    if (sop.aiAnalysis) {
+      content += "\nAI ANALYSIS\n" + "-".repeat(40) + "\n" + sop.aiAnalysis + "\n";
+    }
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${sop.id}-${sop.currentVersion}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Document Downloaded" });
+  }, [sop, toast]);
 
   if (!sop) {
     return (
@@ -59,14 +93,19 @@ export function SOPViewer() {
           <h1 className="text-sm font-semibold">{sop.id}</h1>
           <SOPStatusBadge status={sop.status} />
           <div className="ml-auto flex items-center gap-2">
+            {isLocked && (
+              <>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownload}>
+                  <Download className="h-3.5 w-3.5" /> Download
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleNewVersion}>
+                  <RotateCcw className="h-3.5 w-3.5" /> New Version
+                </Button>
+              </>
+            )}
             {!isLocked && (
               <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigateToEdit(sop.id)}>
                 <Pencil className="h-3.5 w-3.5" /> Edit
-              </Button>
-            )}
-            {isLocked && (
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={handleNewVersion}>
-                <RotateCcw className="h-3.5 w-3.5" /> New Version
               </Button>
             )}
           </div>
@@ -91,7 +130,7 @@ export function SOPViewer() {
           </div>
 
           {/* Steps */}
-          {sop.format === "block" && sop.steps.length > 0 && (
+          {sop.steps.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Procedure Steps</h3>
               {sop.steps.map((step, i) => (
@@ -101,16 +140,16 @@ export function SOPViewer() {
                   </span>
                   <div className="flex-1">
                     <p className="text-sm">{step.instruction || <span className="text-muted-foreground italic">No instruction</span>}</p>
-                    {(step.requirePhoto || step.requireMeasurement) && (
+                    {(step.requirePhoto || step.requireEvidenceFile) && (
                       <div className="flex items-center gap-3 mt-1.5">
                         {step.requirePhoto && (
                           <span className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
                             <Camera className="h-3 w-3" /> Photo Required
                           </span>
                         )}
-                        {step.requireMeasurement && (
+                        {step.requireEvidenceFile && (
                           <span className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                            <Hash className="h-3 w-3" /> Measurement Required
+                            <Paperclip className="h-3 w-3" /> Evidence File Required
                           </span>
                         )}
                       </div>
@@ -122,7 +161,7 @@ export function SOPViewer() {
           )}
 
           {/* File */}
-          {sop.format === "file" && sop.fileName && (
+          {sop.fileName && (
             <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 border">
               <FileText className="h-5 w-5 text-primary" />
               <div>
@@ -152,17 +191,28 @@ export function SOPViewer() {
                 <History className="h-3.5 w-3.5" /> Version History
               </h3>
               <div className="space-y-2">
-                {sop.versions.map((v) => (
-                  <div key={v.version} className={cn(
-                    "flex items-center gap-4 px-4 py-2.5 rounded-lg border text-sm",
-                    v.version === sop.currentVersion ? "bg-primary/5 border-primary/20" : "bg-muted/30"
-                  )}>
-                    <span className="font-mono font-medium">{v.version}</span>
-                    <SOPStatusBadge status={v.status} />
-                    <span className="text-xs text-muted-foreground">{v.createdBy}</span>
-                    <span className="text-xs text-muted-foreground ml-auto">{v.createdAt}</span>
-                  </div>
-                ))}
+                {sop.versions.map((v) => {
+                  const isCurrent = v.version === sop.currentVersion;
+                  const isPrevious = !isCurrent;
+                  return (
+                    <div key={v.version} className={cn(
+                      "flex items-center gap-4 px-4 py-2.5 rounded-lg border text-sm transition-all",
+                      isCurrent && "bg-primary/10 border-primary/30 ring-1 ring-primary/20",
+                      isPrevious && "bg-muted/20 opacity-60"
+                    )}>
+                      <span className={cn(
+                        "font-mono font-medium",
+                        isPrevious && "line-through text-muted-foreground"
+                      )}>{v.version}</span>
+                      <SOPStatusBadge status={v.status} />
+                      <span className={cn("text-xs text-muted-foreground", isPrevious && "line-through")}>{v.createdBy}</span>
+                      <span className={cn("text-xs text-muted-foreground ml-auto", isPrevious && "line-through")}>{v.createdAt}</span>
+                      {isCurrent && (
+                        <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">Current</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

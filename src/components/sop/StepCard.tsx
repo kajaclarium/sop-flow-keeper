@@ -1,4 +1,4 @@
-import { GripVertical, Trash2, Camera, Hash } from "lucide-react";
+import { GripVertical, Trash2, Camera, Paperclip } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -41,16 +41,16 @@ export function StepCard({ step, index, onUpdate, onRemove, canRemove, disabled 
                 disabled={disabled}
               />
               <Camera className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Photo Upload</span>
+              <span className="text-xs text-muted-foreground">Attach Photo</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox
-                checked={step.requireMeasurement}
-                onCheckedChange={(checked) => onUpdate({ requireMeasurement: !!checked })}
+                checked={step.requireEvidenceFile}
+                onCheckedChange={(checked) => onUpdate({ requireEvidenceFile: !!checked })}
                 disabled={disabled}
               />
-              <Hash className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Measurement</span>
+              <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Any Evidence File</span>
             </label>
           </div>
         </div>
