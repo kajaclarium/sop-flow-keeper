@@ -224,7 +224,7 @@ export function SOPEditor({ mode }: { mode: "create" | "edit" }) {
                 disabled={!canEdit}
               />
             </div>
-            <div className="space-y-1.5">
+            {/* <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Assigned Owner</Label>
               <Select value={owner} onValueChange={setOwner} disabled={!canEdit}>
                 <SelectTrigger>
@@ -236,7 +236,7 @@ export function SOPEditor({ mode }: { mode: "create" | "edit" }) {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Effective Date</Label>
               <Input value={sop?.effectiveDate || "—"} disabled className="bg-muted text-sm" />
