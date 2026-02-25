@@ -36,6 +36,14 @@ export interface SOPRecord {
   fileName?: string;
   aiAnalysis?: string;
   versions: SOPVersion[];
+  businessProcessId?: string;
 }
 
-export type AppView = "list" | "create" | "edit" | "view";
+export interface BusinessProcess {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+}
+
+export type AppView = "processes" | "list" | "create" | "edit" | "view";
