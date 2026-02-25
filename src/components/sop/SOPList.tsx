@@ -19,12 +19,16 @@ import { cn } from "@/lib/utils";
 const STATUS_FILTERS: (SOPStatus | "All")[] = ["All", "Draft", "In Review", "Approved", "Effective"];
 
 export function SOPList() {
-  const { sops, navigateToCreate, navigateToView, navigateToEdit, deleteSop } = useSOP();
+  const { sops, navigateToCreate, navigateToView, navigateToEdit, deleteSop, selectedProcessId, getSelectedProcess } = useSOP();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<SOPStatus | "All">("All");
 
+  const processSops = useMemo(() => {
+    return selectedProcessId ? sops.filter((s) => s.businessProcessId === selectedProcessId) : sops;
+  }, [sops, selectedProcessId]);
+
   const filtered = useMemo(() => {
-    return sops.filter((s) => {
+    return processSops.filter((s) => {
       const matchesSearch =
         s.title.toLowerCase().includes(search.toLowerCase()) ||
         s.id.toLowerCase().includes(search.toLowerCase()) ||
@@ -32,18 +36,24 @@ export function SOPList() {
       const matchesStatus = statusFilter === "All" || s.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [sops, search, statusFilter]);
+  }, [processSops, search, statusFilter]);
 
   const stats = useMemo(() => ({
-    total: sops.length,
-    draft: sops.filter((s) => s.status === "Draft").length,
-    review: sops.filter((s) => s.status === "In Review" || s.status === "Approved").length,
-    effective: sops.filter((s) => s.status === "Effective").length,
-  }), [sops]);
+    total: processSops.length,
+    draft: processSops.filter((s) => s.status === "Draft").length,
+    review: processSops.filter((s) => s.status === "In Review" || s.status === "Approved").length,
+    effective: processSops.filter((s) => s.status === "Effective").length,
+  }), [processSops]);
+
+  const processName = getSelectedProcess()?.name;
 
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+        {/* Process Title */}
+        {processName && (
+          <h2 className="text-lg font-semibold">{processName}</h2>
+        )}
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4">
           {[
