@@ -71,7 +71,7 @@ function IOEditor({ items, onChange, direction }: IOEditorProps) {
               <EzSelect
                 options={IO_TYPE_OPTIONS}
                 value={item.type}
-                onChange={(v) => updateItem(item.id, { type: v as IOType })}
+                onValueChange={(v) => updateItem(item.id, { type: v as IOType })}
                 className="h-8 text-xs w-28"
               />
               <EzInput
@@ -249,8 +249,8 @@ export function TaskList() {
 
         {/* Create/Edit Task Dialog */}
         <EzDialog
-          isOpen={dialogOpen}
-          onClose={resetForm}
+          open={dialogOpen}
+          onOpenChange={(isOpen) => { if (!isOpen) resetForm(); }}
           title={editingId ? "Edit Task" : "Create Task"}
           className="max-w-2xl"
         >
@@ -260,7 +260,7 @@ export function TaskList() {
               <EzInput label="Owner" placeholder="e.g. Maintenance Technician" value={owner} onChange={(e) => setOwner(e.target.value)} required />
             </div>
             <EzTextarea label="Description" placeholder="Task description…" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-            <EzSelect label="Risk Level" options={RISK_OPTIONS} value={riskLevel} onChange={(v) => setRiskLevel(v as RiskLevel)} />
+            <EzSelect label="Risk Level" options={RISK_OPTIONS} value={riskLevel} onValueChange={(v) => setRiskLevel(v as RiskLevel)} />
 
             <IOEditor items={inputs} onChange={setInputs} direction="input" />
             <IOEditor items={outputs} onChange={setOutputs} direction="output" />
@@ -366,7 +366,7 @@ export function TaskList() {
                       items={[
                         { label: "View", icon: <Eye className="h-4 w-4" />, onClick: () => navigateToTaskDetail(task.id) },
                         { label: "Edit", icon: <Pencil className="h-4 w-4" />, onClick: () => startEdit(task.id) },
-                        { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(task.id), className: "text-destructive" },
+                        { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(task.id) },
                       ]}
                     />
                   </div>
@@ -378,13 +378,15 @@ export function TaskList() {
 
         {/* Delete Confirmation */}
         <EzAlertDialog
-          isOpen={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
+          open={deleteDialogOpen}
+          onOpenChange={(isOpen) => { if (!isOpen) setDeleteDialogOpen(false); }}
           title={`Delete "${deletingTask?.name}"?`}
           description="This will permanently delete this task. This action cannot be undone."
           onConfirm={confirmDelete}
+          onCancel={() => setDeleteDialogOpen(false)}
           confirmLabel="Delete"
           cancelLabel="Cancel"
+          variant="danger"
         />
       </div>
     </div>

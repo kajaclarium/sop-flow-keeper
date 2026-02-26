@@ -172,7 +172,7 @@ export function SOPList() {
                       items={[
                         { label: "View", icon: <Eye className="h-4 w-4" />, onClick: () => navigateToView(sop.id) },
                         ...(!isEffective ? [{ label: "Edit", icon: <Pencil className="h-4 w-4" />, onClick: () => navigateToEdit(sop.id) }] : []),
-                        { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(sop.id), className: "text-destructive" },
+                        { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(sop.id) },
                       ]}
                     />
                   </div>

@@ -95,8 +95,8 @@ export function ModuleList() {
 
         {/* Create/Edit Dialog */}
         <EzDialog
-          isOpen={dialogOpen}
-          onClose={resetForm}
+          open={dialogOpen}
+          onOpenChange={(isOpen) => { if (!isOpen) resetForm(); }}
           title={editingId ? "Edit Module" : "Create Module"}
         >
           <div className="space-y-4 py-2">
@@ -125,7 +125,7 @@ export function ModuleList() {
               label="Risk Level"
               options={RISK_OPTIONS}
               value={riskLevel}
-              onChange={(v) => setRiskLevel(v as RiskLevel)}
+              onValueChange={(v) => setRiskLevel(v as RiskLevel)}
             />
           </div>
           <div className="flex justify-end gap-2 mt-4">
@@ -215,13 +215,15 @@ export function ModuleList() {
 
         {/* Delete Confirmation */}
         <EzAlertDialog
-          isOpen={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
+          open={deleteDialogOpen}
+          onOpenChange={(isOpen) => { if (!isOpen) setDeleteDialogOpen(false); }}
           title={`Delete "${deletingMod?.name}"?`}
           description={`This will delete the module and all ${deletingTaskCount} associated task${deletingTaskCount !== 1 ? "s" : ""}. This action cannot be undone.`}
           onConfirm={confirmDelete}
+          onCancel={() => setDeleteDialogOpen(false)}
           confirmLabel="Delete"
           cancelLabel="Cancel"
+          variant="danger"
         />
       </div>
     </div>
