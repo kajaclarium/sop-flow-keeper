@@ -184,6 +184,7 @@ export function ModuleList() {
               options={RISK_OPTIONS}
               value={riskLevel}
               onValueChange={(v) => setRiskLevel(v as RiskLevel)}
+              onValueChange={(v) => setRiskLevel(v as RiskLevel)}
             />
           </div>
           <div className="flex justify-end gap-2 mt-4">
@@ -314,8 +315,10 @@ export function ModuleList() {
           description={`This will delete the module and all ${deletingTaskCount} associated task${deletingTaskCount !== 1 ? "s" : ""}. This action cannot be undone.`}
           onConfirm={confirmDelete}
           onCancel={() => setDeleteDialogOpen(false)}
+          onCancel={() => setDeleteDialogOpen(false)}
           confirmLabel="Delete"
           cancelLabel="Cancel"
+          variant="danger"
         />
       </div>
     </div>

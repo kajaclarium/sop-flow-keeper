@@ -38,14 +38,12 @@ export function StepCard({ step, index, onUpdate, onRemove, canRemove, disabled 
               checked={step.requirePhoto}
               onCheckedChange={(checked) => onUpdate({ requirePhoto: !!checked })}
               disabled={disabled}
-              size="small"
             />
             <EzCheckbox
               label="Any Evidence File"
               checked={step.requireEvidenceFile}
               onCheckedChange={(checked) => onUpdate({ requireEvidenceFile: !!checked })}
               disabled={disabled}
-              size="small"
             />
           </div>
         </div>

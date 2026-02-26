@@ -337,6 +337,7 @@ export function TaskList() {
             </div>
             <EzTextarea label="Description" placeholder="Task description…" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
             <EzSelect label="Risk Level" options={RISK_OPTIONS} value={riskLevel} onValueChange={(v) => setRiskLevel(v as RiskLevel)} />
+            <EzSelect label="Risk Level" options={RISK_OPTIONS} value={riskLevel} onValueChange={(v) => setRiskLevel(v as RiskLevel)} />
 
             <IOEditor items={inputs} onChange={setInputs} direction="input" />
             <IOEditor items={outputs} onChange={setOutputs} direction="output" />
@@ -458,6 +459,7 @@ export function TaskList() {
                         { label: "View", icon: <Eye className="h-4 w-4" />, onClick: () => navigateToTaskDetail(task.id) },
                         { label: "Edit", icon: <Pencil className="h-4 w-4" />, onClick: () => startEdit(task.id) },
                         { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(task.id) },
+                        { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(task.id) },
                       ]}
                     />
                   </div>
@@ -477,6 +479,7 @@ export function TaskList() {
           onCancel={() => setDeleteDialogOpen(false)}
           confirmLabel="Delete"
           cancelLabel="Cancel"
+          variant="danger"
         />
       </div>
     </div>
