@@ -184,13 +184,15 @@ export function SOPList() {
 
         {/* Delete Confirmation Dialog */}
         <EzAlertDialog
-          isOpen={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
+          open={deleteDialogOpen}
+          onOpenChange={(isOpen) => { if (!isOpen) setDeleteDialogOpen(false); }}
           title={`Delete ${deletingSop?.id}?`}
           description={`This will permanently delete "${deletingSop?.title}".`}
           onConfirm={confirmDelete}
+          onCancel={() => setDeleteDialogOpen(false)}
           confirmLabel="Delete"
           cancelLabel="Cancel"
+          variant="danger"
         />
       </div>
     </div>
