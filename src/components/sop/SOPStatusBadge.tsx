@@ -1,44 +1,47 @@
-import { cn } from "@/lib/utils";
+import { EzBadge } from "@clarium/ezui-react-components";
 import { SOPStatus } from "@/types/sop";
 import { Lock, Send, CheckCircle2, FileEdit } from "lucide-react";
 
-const statusConfig: Record<SOPStatus, { label: string; className: string; icon: React.ElementType }> = {
+/** Maps each SOP status to its EzBadge severity and icon. */
+const statusConfig: Record<SOPStatus, { label: string; severity: "success" | "warning" | "info" | "primary"; icon: React.ReactNode }> = {
   Draft: {
     label: "Draft",
-    className: "bg-status-draft-bg text-status-draft",
-    icon: FileEdit,
+    severity: "warning",
+    icon: <FileEdit className="h-3 w-3" />,
   },
   "In Review": {
     label: "In Review",
-    className: "bg-status-review-bg text-status-review",
-    icon: Send,
+    severity: "info",
+    icon: <Send className="h-3 w-3" />,
   },
   Approved: {
     label: "Approved",
-    className: "bg-status-approved-bg text-status-approved",
-    icon: CheckCircle2,
+    severity: "primary",
+    icon: <CheckCircle2 className="h-3 w-3" />,
   },
   Effective: {
     label: "Effective",
-    className: "bg-status-effective-bg text-status-effective",
-    icon: Lock,
+    severity: "success",
+    icon: <Lock className="h-3 w-3" />,
   },
 };
 
-export function SOPStatusBadge({ status, size = "sm" }: { status: SOPStatus; size?: "sm" | "lg" }) {
+interface SOPStatusBadgeProps {
+  status: SOPStatus;
+  size?: "sm" | "lg";
+}
+
+/** Renders an EzBadge representing the current SOP workflow status. */
+export function SOPStatusBadge({ status, size = "sm" }: SOPStatusBadgeProps) {
   const config = statusConfig[status];
-  const Icon = config.icon;
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 font-medium rounded-full",
-        config.className,
-        size === "sm" ? "px-2.5 py-0.5 text-xs" : "px-3 py-1 text-sm"
-      )}
-    >
-      <Icon className={size === "sm" ? "h-3 w-3" : "h-3.5 w-3.5"} />
-      {config.label}
-    </span>
+    <EzBadge
+      severity={config.severity}
+      size={size === "sm" ? "small" : "medium"}
+      text={config.label}
+      icon={config.icon}
+      variant="pill"
+    />
   );
 }

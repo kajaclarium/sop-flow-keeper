@@ -1,8 +1,13 @@
+import { EzButton } from "@clarium/ezui-react-components";
 import { ShieldCheck, ChevronRight } from "lucide-react";
 import { useSOP } from "@/contexts/SOPContext";
-import { Button } from "@/components/ui/button";
 
-export function TopBar({ children }: { children?: React.ReactNode }) {
+interface TopBarProps {
+  children?: React.ReactNode;
+}
+
+/** Top navigation bar with breadcrumb navigation for the SOP feature. */
+export function TopBar({ children }: TopBarProps) {
   const { currentView, navigateToProcesses, navigateToList, getSelectedProcess, getSelectedSop } = useSOP();
 
   const process = getSelectedProcess();
@@ -13,7 +18,7 @@ export function TopBar({ children }: { children?: React.ReactNode }) {
   return (
     <header className="flex items-center justify-between px-6 h-14 border-b bg-card shrink-0">
       <div className="flex items-center gap-2.5">
-        <button onClick={navigateToProcesses} className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+        <EzButton variant="text" onClick={navigateToProcesses} className="flex items-center gap-2.5 p-0">
           <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary">
             <ShieldCheck className="h-4 w-4 text-primary-foreground" />
           </div>
@@ -21,14 +26,18 @@ export function TopBar({ children }: { children?: React.ReactNode }) {
             <span className="text-sm font-semibold tracking-tight">SOPvault</span>
             <p className="text-[10px] text-muted-foreground leading-none">Enterprise SOP Platform</p>
           </div>
-        </button>
+        </EzButton>
 
         {showProcessCrumb && process && (
           <>
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-            <button onClick={() => navigateToList()} className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <EzButton
+              variant="text"
+              onClick={() => navigateToList()}
+              className="text-xs font-medium text-muted-foreground hover:text-foreground p-0"
+            >
               {process.name}
-            </button>
+            </EzButton>
           </>
         )}
 

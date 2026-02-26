@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
-import { Upload, FileUp, Loader2, FileText, X, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Upload, FileUp, Loader2, FileText, Sparkles } from "lucide-react";
+import { EzButton } from "@clarium/ezui-react-components";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 
@@ -13,6 +13,7 @@ interface FileUploadZoneProps {
   disabled?: boolean;
 }
 
+/** Renders a drag-and-drop file upload zone with AI analysis capabilities. */
 export function FileUploadZone({
   onFileSelected,
   fileName,
@@ -64,6 +65,7 @@ export function FileUploadZone({
           fileName && "border-primary/30 bg-primary/5"
         )}
       >
+        {/* Hidden native file input — no EZUI equivalent for custom drag-and-drop */}
         <input
           ref={inputRef}
           type="file"
@@ -92,30 +94,25 @@ export function FileUploadZone({
               <p className="font-medium text-sm">Drag & drop your file here</p>
               <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, TXT, or image files up to 25MB</p>
             </div>
-            <Button variant="outline" size="sm" className="gap-1.5" type="button">
-              <FileUp className="h-4 w-4" />
+            <EzButton variant="outlined" size="small" icon={<FileUp className="h-4 w-4" />} type="button">
               Browse Files
-            </Button>
+            </EzButton>
           </div>
         )}
       </div>
 
       {fileName && !disabled && (
         <div className="flex justify-center">
-          <Button
-            variant="default"
-            size="sm"
+          <EzButton
+            severity="primary"
+            size="small"
             className="gap-2"
             onClick={onAnalyze}
             disabled={isAnalyzing}
+            icon={isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           >
-            {isAnalyzing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="h-4 w-4" />
-            )}
             {isAnalyzing ? "Analyzing with AI…" : "Analyze with AI"}
-          </Button>
+          </EzButton>
         </div>
       )}
 

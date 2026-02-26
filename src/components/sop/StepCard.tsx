@@ -1,7 +1,5 @@
+import { EzTextarea, EzCheckbox, EzButton } from "@clarium/ezui-react-components";
 import { GripVertical, Trash2, Camera, Paperclip } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
 import { SOPStep } from "@/types/sop";
 
 interface StepCardProps {
@@ -13,6 +11,7 @@ interface StepCardProps {
   disabled?: boolean;
 }
 
+/** Renders an individual SOP procedure step with instruction text and evidence toggle options. */
 export function StepCard({ step, index, onUpdate, onRemove, canRemove, disabled }: StepCardProps) {
   return (
     <div className="rounded-xl border bg-card p-5 space-y-4 group transition-shadow hover:shadow-sm">
@@ -24,7 +23,7 @@ export function StepCard({ step, index, onUpdate, onRemove, canRemove, disabled 
           </span>
         </div>
         <div className="flex-1 space-y-3">
-          <Textarea
+          <EzTextarea
             placeholder="Describe this step…"
             value={step.instruction}
             onChange={(e) => onUpdate({ instruction: e.target.value })}
@@ -34,36 +33,32 @@ export function StepCard({ step, index, onUpdate, onRemove, canRemove, disabled 
           />
           <div className="flex items-center gap-5">
             <span className="text-xs text-muted-foreground font-medium">Evidence:</span>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={step.requirePhoto}
-                onCheckedChange={(checked) => onUpdate({ requirePhoto: !!checked })}
-                disabled={disabled}
-              />
-              <Camera className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Attach Photo</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={step.requireEvidenceFile}
-                onCheckedChange={(checked) => onUpdate({ requireEvidenceFile: !!checked })}
-                disabled={disabled}
-              />
-              <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Any Evidence File</span>
-            </label>
+            <EzCheckbox
+              label="Attach Photo"
+              checked={step.requirePhoto}
+              onCheckedChange={(checked) => onUpdate({ requirePhoto: !!checked })}
+              disabled={disabled}
+              size="small"
+            />
+            <EzCheckbox
+              label="Any Evidence File"
+              checked={step.requireEvidenceFile}
+              onCheckedChange={(checked) => onUpdate({ requireEvidenceFile: !!checked })}
+              disabled={disabled}
+              size="small"
+            />
           </div>
         </div>
         {!disabled && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="shrink-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+          <EzButton
+            variant="text"
+            severity="danger"
+            className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={onRemove}
             disabled={!canRemove}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            icon={<Trash2 className="h-4 w-4" />}
+            aria-label="Remove step"
+          />
         )}
       </div>
     </div>

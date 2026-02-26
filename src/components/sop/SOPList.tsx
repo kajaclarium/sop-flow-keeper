@@ -2,26 +2,21 @@ import { useState, useMemo } from "react";
 import { useSOP } from "@/contexts/SOPContext";
 import { SOPStatus } from "@/types/sop";
 import { SOPStatusBadge } from "./SOPStatusBadge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { EzButton, EzInput, EzMenu, EzAlertDialog } from "@clarium/ezui-react-components";
 import {
   Plus, Search, Eye, Pencil, Trash2, FileText, Blocks, Lock, Clock, User, ChevronDown,
 } from "lucide-react";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
 const STATUS_FILTERS: (SOPStatus | "All")[] = ["All", "Draft", "In Review", "Approved", "Effective"];
 
+/** Lists all SOPs for the selected business process with search, status filtering, and CRUD actions. */
 export function SOPList() {
   const { sops, navigateToCreate, navigateToView, navigateToEdit, deleteSop, selectedProcessId, getSelectedProcess } = useSOP();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<SOPStatus | "All">("All");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingSopId, setDeletingSopId] = useState<string | null>(null);
 
   const processSops = useMemo(() => {
     return selectedProcessId ? sops.filter((s) => s.businessProcessId === selectedProcessId) : sops;
@@ -47,6 +42,23 @@ export function SOPList() {
 
   const processName = getSelectedProcess()?.name;
 
+  /** Opens the delete confirmation dialog for a specific SOP. */
+  const openDeleteDialog = (sopId: string) => {
+    setDeletingSopId(sopId);
+    setDeleteDialogOpen(true);
+  };
+
+  /** Executes the delete action and closes the dialog. */
+  const confirmDelete = () => {
+    if (deletingSopId) {
+      deleteSop(deletingSopId);
+    }
+    setDeleteDialogOpen(false);
+    setDeletingSopId(null);
+  };
+
+  const deletingSop = deletingSopId ? sops.find((s) => s.id === deletingSopId) : null;
+
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
@@ -71,27 +83,30 @@ export function SOPList() {
 
         {/* Toolbar */}
         <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search SOPs…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <div className="flex-1 max-w-sm">
+            <EzInput
+              placeholder="Search SOPs…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+            />
           </div>
           <div className="flex items-center gap-1.5">
             {STATUS_FILTERS.map((s) => (
-              <button
+              <EzButton
                 key={s}
+                variant={statusFilter === s ? "classic" : "text"}
+                severity={statusFilter === s ? "primary" : undefined}
+                size="small"
                 onClick={() => setStatusFilter(s)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
-                  statusFilter === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
-                )}
               >
                 {s}
-              </button>
+              </EzButton>
             ))}
           </div>
-          <Button onClick={navigateToCreate} className="gap-2 ml-auto">
-            <Plus className="h-4 w-4" /> Create SOP
-          </Button>
+          <EzButton onClick={navigateToCreate} className="ml-auto" icon={<Plus className="h-4 w-4" />}>
+            Create SOP
+          </EzButton>
         </div>
 
         {/* List */}
@@ -104,7 +119,7 @@ export function SOPList() {
           ) : (
             filtered.map((sop) => {
               const isEffective = sop.status === "Effective";
-              // Check if this SOP has a newer version (i.e., it's superseded)
+              /* Check if this SOP has a newer effective version (i.e., it's superseded) */
               const isSuperseded = !isEffective && sop.versions.length > 1 && sop.versions.some(v => v.status === "Effective" && v.version !== sop.currentVersion);
               return (
                 <div
@@ -149,45 +164,34 @@ export function SOPList() {
                     <Clock className="h-3 w-3" /> {sop.effectiveDate || sop.createdAt}
                   </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="shrink-0 opacity-0 group-hover:opacity-100">
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenuItem onClick={() => navigateToView(sop.id)}>
-                        <Eye className="h-4 w-4 mr-2" /> View
-                      </DropdownMenuItem>
-                      {!isEffective && (
-                        <DropdownMenuItem onClick={() => navigateToEdit(sop.id)}>
-                          <Pencil className="h-4 w-4 mr-2" /> Edit
-                        </DropdownMenuItem>
-                      )}
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive">
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete
-                          </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete {sop.id}?</AlertDialogTitle>
-                            <AlertDialogDescription>This will permanently delete "{sop.title}".</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteSop(sop.id)}>Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <EzMenu
+                      trigger={
+                        <EzButton variant="text" className="shrink-0 opacity-0 group-hover:opacity-100" icon={<ChevronDown className="h-4 w-4" />} aria-label="Actions" />
+                      }
+                      items={[
+                        { label: "View", icon: <Eye className="h-4 w-4" />, onClick: () => navigateToView(sop.id) },
+                        ...(!isEffective ? [{ label: "Edit", icon: <Pencil className="h-4 w-4" />, onClick: () => navigateToEdit(sop.id) }] : []),
+                        { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(sop.id), className: "text-destructive" },
+                      ]}
+                    />
+                  </div>
                 </div>
               );
             })
           )}
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <EzAlertDialog
+          isOpen={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          title={`Delete ${deletingSop?.id}?`}
+          description={`This will permanently delete "${deletingSop?.title}".`}
+          onConfirm={confirmDelete}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+        />
       </div>
     </div>
   );

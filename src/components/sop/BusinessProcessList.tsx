@@ -1,26 +1,22 @@
 import { useState } from "react";
 import { useSOP } from "@/contexts/SOPContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { EzButton, EzInput, EzDialog, EzAlertDialog } from "@clarium/ezui-react-components";
 import {
   Plus, FolderOpen, Pencil, Trash2, ArrowRight, FileText,
 } from "lucide-react";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
+/** Lists all business processes as cards, with create/edit/delete capabilities. */
 export function BusinessProcessList() {
   const { businessProcesses, sops, createBusinessProcess, updateBusinessProcess, deleteBusinessProcess, navigateToProcessSops } = useSOP();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  /** Saves a new or edited business process. */
   const handleSave = () => {
     if (!name.trim()) return;
     if (editingId) {
@@ -47,7 +43,24 @@ export function BusinessProcessList() {
     setDialogOpen(true);
   };
 
+  /** Opens the delete confirmation dialog for a specific business process. */
+  const openDeleteDialog = (id: string) => {
+    setDeletingId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  /** Executes the delete action and closes the dialog. */
+  const confirmDelete = () => {
+    if (deletingId) {
+      deleteBusinessProcess(deletingId);
+    }
+    setDeleteDialogOpen(false);
+    setDeletingId(null);
+  };
+
   const getSopCount = (processId: string) => sops.filter((s) => s.businessProcessId === processId).length;
+  const deletingBp = deletingId ? businessProcesses.find((b) => b.id === deletingId) : null;
+  const deletingSopCount = deletingId ? getSopCount(deletingId) : 0;
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -60,33 +73,38 @@ export function BusinessProcessList() {
               Organize your SOPs by department or business process
             </p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); setDialogOpen(open); }}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" /> New Process
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingId ? "Edit" : "Create"} Business Process</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Name</label>
-                  <Input placeholder="e.g. Facility Management" value={name} onChange={(e) => setName(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <Input placeholder="Brief description…" value={description} onChange={(e) => setDescription(e.target.value)} />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={resetForm}>Cancel</Button>
-                <Button onClick={handleSave} disabled={!name.trim()}>{editingId ? "Update" : "Create"}</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <EzButton onClick={() => setDialogOpen(true)} icon={<Plus className="h-4 w-4" />}>
+            New Process
+          </EzButton>
         </div>
+
+        {/* Create/Edit Dialog */}
+        <EzDialog
+          isOpen={dialogOpen}
+          onClose={resetForm}
+          title={editingId ? "Edit Business Process" : "Create Business Process"}
+        >
+          <div className="space-y-4 py-2">
+            <EzInput
+              label="Name"
+              placeholder="e.g. Facility Management"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <EzInput
+              label="Description"
+              placeholder="Brief description…"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <EzButton variant="outlined" onClick={resetForm}>Cancel</EzButton>
+            <EzButton onClick={handleSave} disabled={!name.trim()}>
+              {editingId ? "Update" : "Create"}
+            </EzButton>
+          </div>
+        </EzDialog>
 
         {/* Grid */}
         {businessProcesses.length === 0 ? (
@@ -125,38 +143,23 @@ export function BusinessProcessList() {
                       <span>{count} SOP{count !== 1 ? "s" : ""}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                      <EzButton
+                        variant="text"
+                        size="small"
+                        className="opacity-0 group-hover:opacity-100"
                         onClick={(e) => { e.stopPropagation(); startEdit(bp.id); }}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete "{bp.name}"?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will delete the business process and unlink {count} SOP{count !== 1 ? "s" : ""}. The SOPs themselves won't be deleted.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteBusinessProcess(bp.id)}>Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                        icon={<Pencil className="h-3.5 w-3.5" />}
+                        aria-label="Edit"
+                      />
+                      <EzButton
+                        variant="text"
+                        severity="danger"
+                        size="small"
+                        className="opacity-0 group-hover:opacity-100"
+                        onClick={(e) => { e.stopPropagation(); openDeleteDialog(bp.id); }}
+                        icon={<Trash2 className="h-3.5 w-3.5" />}
+                        aria-label="Delete"
+                      />
                       <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 ml-1" />
                     </div>
                   </div>
@@ -165,6 +168,17 @@ export function BusinessProcessList() {
             })}
           </div>
         )}
+
+        {/* Delete Confirmation */}
+        <EzAlertDialog
+          isOpen={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          title={`Delete "${deletingBp?.name}"?`}
+          description={`This will delete the business process and unlink ${deletingSopCount} SOP${deletingSopCount !== 1 ? "s" : ""}. The SOPs themselves won't be deleted.`}
+          onConfirm={confirmDelete}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+        />
       </div>
     </div>
   );

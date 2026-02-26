@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useSOP } from "@/contexts/SOPContext";
 import { SOPStatusBadge } from "./SOPStatusBadge";
 import { StatusWorkflow } from "./StatusWorkflow";
-import { Button } from "@/components/ui/button";
+import { EzButton, EzBadge } from "@clarium/ezui-react-components";
 import ReactMarkdown from "react-markdown";
 import {
   ArrowLeft,
@@ -24,6 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
+/** Read-only view of a single SOP document with status actions. */
 export function SOPViewer() {
   const { getSelectedSop, navigateToList, navigateToEdit, transitionStatus, createNewVersion } = useSOP();
   const { toast } = useToast();
@@ -31,7 +32,7 @@ export function SOPViewer() {
 
   const handleDownload = useCallback(() => {
     if (!sop) return;
-    // Generate a text document from the SOP data
+    /* Generate a text document from the SOP data */
     let content = `SOP: ${sop.id}\nTitle: ${sop.title}\nVersion: ${sop.currentVersion}\nStatus: ${sop.status}\nOwner: ${sop.owner}\nEffective Date: ${sop.effectiveDate || "N/A"}\n\n`;
     content += "=" .repeat(60) + "\n\n";
 
@@ -86,27 +87,27 @@ export function SOPViewer() {
       <div className="max-w-4xl mx-auto px-6 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={navigateToList}>
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Button>
+          <EzButton variant="text" size="small" onClick={navigateToList} icon={<ArrowLeft className="h-4 w-4" />}>
+            Back
+          </EzButton>
           <div className="h-5 w-px bg-border" />
           <h1 className="text-sm font-semibold">{sop.id}</h1>
           <SOPStatusBadge status={sop.status} />
           <div className="ml-auto flex items-center gap-2">
             {isLocked && (
               <>
-                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownload}>
-                  <Download className="h-3.5 w-3.5" /> Download
-                </Button>
-                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleNewVersion}>
-                  <RotateCcw className="h-3.5 w-3.5" /> New Version
-                </Button>
+                <EzButton variant="outlined" size="small" onClick={handleDownload} icon={<Download className="h-3.5 w-3.5" />}>
+                  Download
+                </EzButton>
+                <EzButton variant="outlined" size="small" onClick={handleNewVersion} icon={<RotateCcw className="h-3.5 w-3.5" />}>
+                  New Version
+                </EzButton>
               </>
             )}
             {!isLocked && (
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigateToEdit(sop.id)}>
-                <Pencil className="h-3.5 w-3.5" /> Edit
-              </Button>
+              <EzButton variant="outlined" size="small" onClick={() => navigateToEdit(sop.id)} icon={<Pencil className="h-3.5 w-3.5" />}>
+                Edit
+              </EzButton>
             )}
           </div>
         </div>
@@ -143,14 +144,10 @@ export function SOPViewer() {
                     {(step.requirePhoto || step.requireEvidenceFile) && (
                       <div className="flex items-center gap-3 mt-1.5">
                         {step.requirePhoto && (
-                          <span className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                            <Camera className="h-3 w-3" /> Photo Required
-                          </span>
+                          <EzBadge severity="neutral" size="small" icon={<Camera className="h-3 w-3" />} text="Photo Required" />
                         )}
                         {step.requireEvidenceFile && (
-                          <span className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                            <Paperclip className="h-3 w-3" /> Evidence File Required
-                          </span>
+                          <EzBadge severity="neutral" size="small" icon={<Paperclip className="h-3 w-3" />} text="Evidence File Required" />
                         )}
                       </div>
                     )}
@@ -208,7 +205,7 @@ export function SOPViewer() {
                       <span className={cn("text-xs text-muted-foreground", isPrevious && "line-through")}>{v.createdBy}</span>
                       <span className={cn("text-xs text-muted-foreground ml-auto", isPrevious && "line-through")}>{v.createdAt}</span>
                       {isCurrent && (
-                        <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">Current</span>
+                        <EzBadge severity="primary" size="small" text="Current" />
                       )}
                     </div>
                   );
@@ -221,19 +218,19 @@ export function SOPViewer() {
         {/* Action bar */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t">
           {sop.status === "Draft" && (
-            <Button variant="secondary" className="gap-1.5" onClick={() => handleTransition("In Review")}>
-              <Send className="h-4 w-4" /> Send for Review
-            </Button>
+            <EzButton severity="secondary" onClick={() => handleTransition("In Review")} icon={<Send className="h-4 w-4" />}>
+              Send for Review
+            </EzButton>
           )}
           {sop.status === "In Review" && (
-            <Button variant="secondary" className="gap-1.5" onClick={() => handleTransition("Approved")}>
-              <CheckCircle2 className="h-4 w-4" /> Approve
-            </Button>
+            <EzButton severity="secondary" onClick={() => handleTransition("Approved")} icon={<CheckCircle2 className="h-4 w-4" />}>
+              Approve
+            </EzButton>
           )}
           {sop.status === "Approved" && (
-            <Button className="gap-1.5" onClick={() => handleTransition("Effective")}>
-              <Lock className="h-4 w-4" /> Make Effective
-            </Button>
+            <EzButton severity="primary" onClick={() => handleTransition("Effective")} icon={<Lock className="h-4 w-4" />}>
+              Make Effective
+            </EzButton>
           )}
         </div>
       </div>
