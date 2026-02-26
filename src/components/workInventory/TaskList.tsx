@@ -1,12 +1,13 @@
 import { useState, useMemo } from "react";
-import { useWorkInventory } from "@/contexts/WorkInventoryContext";
+import { useWorkInventory, AVAILABLE_SOPS } from "@/contexts/WorkInventoryContext";
 import { RiskLevel, TaskIO, IOType } from "@/types/workInventory";
 import { RiskBadge } from "./RiskBadge";
 import { ControlStatusBadge } from "./ControlStatusBadge";
+import { InfoTooltip } from "@/components/shared/InfoTooltip";
 import { EzButton, EzInput, EzTextarea, EzSelect, EzDialog, EzMenu, EzAlertDialog } from "@clarium/ezui-react-components";
 import {
   Plus, Search, ListTodo, User, ArrowDownToLine, ArrowUpFromLine, FileText, ChevronDown,
-  Eye, Pencil, Trash2, Link2,
+  Eye, Pencil, Trash2, Link2, TrendingUp, CheckCircle2, Clock, Circle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,14 +21,19 @@ const RISK_OPTIONS = RISK_LEVELS.map((r) => ({ label: r, value: r }));
 /** I/O type options formatted for EzSelect. */
 const IO_TYPE_OPTIONS = IO_TYPES.map((t) => ({ label: t.charAt(0).toUpperCase() + t.slice(1), value: t }));
 
-const AVAILABLE_SOPS = [
-  { id: "SOP-001", title: "Facility Cleaning Protocol" },
-  { id: "SOP-002", title: "Equipment Calibration Procedure" },
-  { id: "SOP-003", title: "Incident Response Plan" },
-  { id: "SOP-004", title: "Chemical Waste Disposal" },
-  { id: "SOP-005", title: "Employee Onboarding Checklist" },
-  { id: "SOP-006", title: "Data Backup & Recovery" },
-];
+/** RAG color styles for KPI status. */
+const RAG_COLORS = {
+  Green: { bg: "bg-emerald-500", text: "text-emerald-700", track: "bg-emerald-100" },
+  Amber: { bg: "bg-amber-500", text: "text-amber-700", track: "bg-amber-100" },
+  Red: { bg: "bg-red-500", text: "text-red-700", track: "bg-red-100" },
+};
+
+/** Icon and color mapping for task completion status. */
+const COMPLETION_ICONS = {
+  "Not Started": { icon: Circle, color: "text-muted-foreground", badgeBg: "bg-gray-100 text-gray-600" },
+  "In Progress": { icon: Clock, color: "text-amber-600", badgeBg: "bg-amber-100 text-amber-700" },
+  "Completed": { icon: CheckCircle2, color: "text-emerald-600", badgeBg: "bg-emerald-100 text-emerald-700" },
+};
 
 interface IOEditorProps {
   items: TaskIO[];
@@ -71,7 +77,7 @@ function IOEditor({ items, onChange, direction }: IOEditorProps) {
               <EzSelect
                 options={IO_TYPE_OPTIONS}
                 value={item.type}
-                onChange={(v) => updateItem(item.id, { type: v as IOType })}
+                onValueChange={(v) => updateItem(item.id, { type: v as IOType })}
                 className="h-8 text-xs w-28"
               />
               <EzInput
@@ -100,11 +106,12 @@ function IOEditor({ items, onChange, direction }: IOEditorProps) {
   );
 }
 
-/** Lists all tasks for a selected module with search, risk filtering, and CRUD actions. */
+/** Lists all tasks for a selected module with search, risk filtering, KPI tracking, and CRUD actions. */
 export function TaskList() {
   const {
     tasks, getSelectedModule, createTask, updateTask, deleteTask,
     navigateToTaskDetail, getTaskControlStatus, selectedModuleId,
+    getModuleKpiScore, getModuleRagStatus, getTaskKpiScore, getTaskWeight,
   } = useWorkInventory();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -116,6 +123,7 @@ export function TaskList() {
   const [inputs, setInputs] = useState<TaskIO[]>([]);
   const [outputs, setOutputs] = useState<TaskIO[]>([]);
   const [linkedSopIds, setLinkedSopIds] = useState<string[]>([]);
+  const [sopSearch, setSopSearch] = useState("");
 
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState<RiskLevel | "All">("All");
@@ -141,6 +149,21 @@ export function TaskList() {
     critical: moduleTasks.filter((t) => t.riskLevel === "Critical").length,
   }), [moduleTasks, getTaskControlStatus]);
 
+  /** Filter SOPs based on search query — matches ID or title. */
+  const filteredSops = useMemo(() => {
+    if (!sopSearch.trim()) return AVAILABLE_SOPS;
+    const q = sopSearch.toLowerCase();
+    return AVAILABLE_SOPS.filter((s) =>
+      s.id.toLowerCase().includes(q) || s.title.toLowerCase().includes(q)
+    );
+  }, [sopSearch]);
+
+  /* KPI data for the current module */
+  const kpiScore = selectedModuleId ? getModuleKpiScore(selectedModuleId) : 0;
+  const ragStatus = selectedModuleId ? getModuleRagStatus(selectedModuleId) : "Red";
+  const ragStyle = RAG_COLORS[ragStatus];
+  const taskWeight = selectedModuleId ? getTaskWeight(selectedModuleId) : 0;
+
   /** Saves a new or edited task. */
   const handleSave = () => {
     if (!name.trim() || !owner.trim() || !selectedModuleId) return;
@@ -160,6 +183,7 @@ export function TaskList() {
     setInputs([]);
     setOutputs([]);
     setLinkedSopIds([]);
+    setSopSearch("");
     setEditingId(null);
     setDialogOpen(false);
   };
@@ -175,6 +199,7 @@ export function TaskList() {
     setInputs([...task.inputs]);
     setOutputs([...task.outputs]);
     setLinkedSopIds([...task.linkedSopIds]);
+    setSopSearch("");
     setDialogOpen(true);
   };
 
@@ -202,7 +227,58 @@ export function TaskList() {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
-        {module && <h2 className="text-lg font-semibold">{module.name}</h2>}
+        {/* Module Header with Description */}
+        {module && (
+          <div className="rounded-xl border bg-card p-5 space-y-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold">{module.name}</h2>
+                  <InfoTooltip
+                    title={module.name}
+                    description={module.description || "No description available."}
+                    tip={`This process contains ${moduleTasks.length} task(s). Each task must have linked SOPs (Controlled) or it will be flagged as Uncontrolled.`}
+                    side="bottom"
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{module.description}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 ml-4">
+                <RiskBadge level={module.riskLevel} />
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <User className="h-3 w-3" />
+                  <span>{module.owner}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Module KPI Bar */}
+            {moduleTasks.length > 0 && (
+              <div className="pt-3 border-t space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium flex items-center gap-1.5">
+                    <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                    Process KPI — Each task = {taskWeight.toFixed(1)}% weight
+                    <InfoTooltip
+                      title="Process KPI Score"
+                      description="The KPI score measures completion across all tasks in this process. Each task gets equal weight (100% / total tasks). Completed = full weight, In Progress = half weight, Not Started = zero."
+                      tip="Update task completion status from the Task Detail view. The RAG status auto-updates based on the aggregate score."
+                      side="bottom"
+                      iconSize={12}
+                    />
+                  </span>
+                  <span className={cn("font-bold text-sm", ragStyle.text)}>{kpiScore}%</span>
+                </div>
+                <div className={cn("h-2 rounded-full overflow-hidden", ragStyle.track)}>
+                  <div
+                    className={cn("h-full rounded-full transition-all duration-500", ragStyle.bg)}
+                    style={{ width: `${Math.min(kpiScore, 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4">
@@ -249,8 +325,8 @@ export function TaskList() {
 
         {/* Create/Edit Task Dialog */}
         <EzDialog
-          isOpen={dialogOpen}
-          onClose={resetForm}
+          open={dialogOpen}
+          onOpenChange={(open) => { if (!open) resetForm(); }}
           title={editingId ? "Edit Task" : "Create Task"}
           className="max-w-2xl"
         >
@@ -260,19 +336,26 @@ export function TaskList() {
               <EzInput label="Owner" placeholder="e.g. Maintenance Technician" value={owner} onChange={(e) => setOwner(e.target.value)} required />
             </div>
             <EzTextarea label="Description" placeholder="Task description…" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-            <EzSelect label="Risk Level" options={RISK_OPTIONS} value={riskLevel} onChange={(v) => setRiskLevel(v as RiskLevel)} />
+            <EzSelect label="Risk Level" options={RISK_OPTIONS} value={riskLevel} onValueChange={(v) => setRiskLevel(v as RiskLevel)} />
 
             <IOEditor items={inputs} onChange={setInputs} direction="input" />
             <IOEditor items={outputs} onChange={setOutputs} direction="output" />
 
-            {/* SOP Linking */}
+            {/* SOP Linking with Search */}
             <div className="space-y-2">
               <span className="text-sm font-medium flex items-center gap-1.5">
                 <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
                 Link SOPs
               </span>
-              <div className="grid grid-cols-2 gap-2">
-                {AVAILABLE_SOPS.map((sop) => {
+              <EzInput
+                placeholder="Search SOPs by ID or title…"
+                value={sopSearch}
+                onChange={(e) => setSopSearch(e.target.value)}
+                prefix={<Search className="h-3.5 w-3.5 text-muted-foreground" />}
+                className="text-xs"
+              />
+              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                {filteredSops.map((sop) => {
                   const isLinked = linkedSopIds.includes(sop.id);
                   return (
                     <EzButton
@@ -294,6 +377,9 @@ export function TaskList() {
                     </EzButton>
                   );
                 })}
+                {filteredSops.length === 0 && (
+                  <p className="col-span-2 text-xs text-muted-foreground text-center py-3">No SOPs match your search</p>
+                )}
               </div>
               {linkedSopIds.length === 0 && (
                 <p className="text-xs text-destructive flex items-center gap-1">
@@ -321,6 +407,10 @@ export function TaskList() {
           ) : (
             filtered.map((task) => {
               const controlStatus = getTaskControlStatus(task);
+              const taskKpi = getTaskKpiScore(task);
+              const completionStyle = COMPLETION_ICONS[task.completionStatus];
+              const CompIcon = completionStyle.icon;
+              const weightedScore = (taskWeight * taskKpi) / 100;
               return (
                 <div
                   key={task.id}
@@ -345,9 +435,10 @@ export function TaskList() {
                     <User className="h-3 w-3" /> {task.owner}
                   </div>
 
-                  <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
-                    <ArrowDownToLine className="h-3 w-3" /> {task.inputs.length}
-                    <ArrowUpFromLine className="h-3 w-3 ml-1" /> {task.outputs.length}
+                  {/* Completion Status / KPI */}
+                  <div className={cn("flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold shrink-0", completionStyle.badgeBg)}>
+                    <CompIcon className="h-3 w-3" />
+                    {weightedScore.toFixed(1)}%
                   </div>
 
                   <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
@@ -366,7 +457,7 @@ export function TaskList() {
                       items={[
                         { label: "View", icon: <Eye className="h-4 w-4" />, onClick: () => navigateToTaskDetail(task.id) },
                         { label: "Edit", icon: <Pencil className="h-4 w-4" />, onClick: () => startEdit(task.id) },
-                        { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(task.id), className: "text-destructive" },
+                        { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(task.id) },
                       ]}
                     />
                   </div>
@@ -378,11 +469,12 @@ export function TaskList() {
 
         {/* Delete Confirmation */}
         <EzAlertDialog
-          isOpen={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
+          open={deleteDialogOpen}
+          onOpenChange={(open) => { if (!open) setDeleteDialogOpen(false); }}
           title={`Delete "${deletingTask?.name}"?`}
           description="This will permanently delete this task. This action cannot be undone."
           onConfirm={confirmDelete}
+          onCancel={() => setDeleteDialogOpen(false)}
           confirmLabel="Delete"
           cancelLabel="Cancel"
         />

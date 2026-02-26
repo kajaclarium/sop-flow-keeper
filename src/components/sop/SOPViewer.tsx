@@ -1,7 +1,9 @@
 import { useCallback } from "react";
+import { Link } from "react-router-dom";
 import { useSOP } from "@/contexts/SOPContext";
 import { SOPStatusBadge } from "./SOPStatusBadge";
 import { StatusWorkflow } from "./StatusWorkflow";
+import { InfoTooltip } from "@/components/shared/InfoTooltip";
 import { EzButton, EzBadge } from "@clarium/ezui-react-components";
 import ReactMarkdown from "react-markdown";
 import {
@@ -20,6 +22,8 @@ import {
   History,
   Sparkles,
   Download,
+  Boxes,
+  ListTodo,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -113,7 +117,16 @@ export function SOPViewer() {
         </div>
 
         {/* Workflow */}
-        <StatusWorkflow currentStatus={sop.status} />
+        <div className="flex items-center gap-2">
+          <StatusWorkflow currentStatus={sop.status} />
+          <InfoTooltip
+            title="SOP Lifecycle Workflow"
+            description="Every SOP follows a strict lifecycle: Draft (authoring) → In Review (peer review) → Approved (sign-off) → Effective (live and locked). Only Effective SOPs govern active operations."
+            tip="Once a SOP is Effective, it cannot be edited. Use 'New Version' to create a draft copy for revisions while the current version remains active."
+            side="bottom"
+            iconSize={13}
+          />
+        </div>
 
         {/* Document card */}
         <div className="rounded-xl border bg-card p-6 space-y-6">
@@ -133,7 +146,16 @@ export function SOPViewer() {
           {/* Steps */}
           {sop.steps.length > 0 && (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Procedure Steps</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Procedure Steps</h3>
+                <InfoTooltip
+                  title="Procedure Steps"
+                  description="Procedure steps define the sequential actions an operator must follow to execute this SOP. Each step can optionally require photo evidence or file attachments for compliance verification."
+                  tip="Steps should be clear, atomic actions. Use the evidence requirements (photo, file) for steps that need audit-proof documentation."
+                  side="right"
+                  iconSize={12}
+                />
+              </div>
               {sop.steps.map((step, i) => (
                 <div key={step.id} className="flex gap-3 items-start">
                   <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-semibold shrink-0 mt-0.5">
@@ -174,6 +196,13 @@ export function SOPViewer() {
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <h3 className="text-sm font-semibold">AI Analysis</h3>
+                <InfoTooltip
+                  title="AI Document Analysis"
+                  description="This section contains AI-generated analysis of the uploaded SOP document. The AI extracts key information, identifies risks, and suggests improvements based on the document content."
+                  tip="AI analysis is a guide, not a final result. Always review AI suggestions and have domain experts validate recommendations before applying changes."
+                  side="right"
+                  iconSize={12}
+                />
               </div>
               <div className="prose prose-sm max-w-none text-sm">
                 <ReactMarkdown>{sop.aiAnalysis}</ReactMarkdown>
@@ -186,6 +215,13 @@ export function SOPViewer() {
             <div className="space-y-3">
               <h3 className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                 <History className="h-3.5 w-3.5" /> Version History
+                <InfoTooltip
+                  title="Version History"
+                  description="Track all versions of this SOP document. Each version has its own lifecycle status. Only one version can be 'Effective' at a time — previous versions are superseded."
+                  tip="Creating a new version from an Effective SOP copies its content into a new Draft while keeping the current version active until the new one is made Effective."
+                  side="left"
+                  iconSize={12}
+                />
               </h3>
               <div className="space-y-2">
                 {sop.versions.map((v) => {
@@ -213,6 +249,36 @@ export function SOPViewer() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Linked Work Inventory Tasks */}
+        <div className="rounded-xl border bg-card p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
+              <Boxes className="h-4 w-4 text-primary" />
+              Linked Work Inventory Tasks
+            </h3>
+            <Link to="/work-inventory" className="no-underline">
+              <EzButton variant="text" size="small" icon={<ListTodo className="h-3.5 w-3.5" />}>
+                Open Work Inventory
+              </EzButton>
+            </Link>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Tasks in the Work Inventory that reference this SOP ({sop.id}) are visible in the Process Registry.
+            Navigate to Work Inventory to view and manage task-SOP linkages.
+          </p>
+          <Link to="/work-inventory" className="no-underline">
+            <div className="flex items-center gap-3 rounded-lg border border-dashed p-3 hover:bg-accent/50 transition-colors cursor-pointer">
+              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10 shrink-0">
+                <Boxes className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">View in Work Inventory</p>
+                <p className="text-xs text-muted-foreground">See which process tasks are governed by this SOP</p>
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Action bar */}

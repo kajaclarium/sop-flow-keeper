@@ -1,12 +1,13 @@
 import { EzButton } from "@clarium/ezui-react-components";
 import { ShieldCheck, ChevronRight } from "lucide-react";
 import { useSOP } from "@/contexts/SOPContext";
+import { AppNav, QuickSwitch } from "@/components/shared/AppNav";
 
 interface TopBarProps {
   children?: React.ReactNode;
 }
 
-/** Top navigation bar with breadcrumb navigation for the SOP feature. */
+/** Top navigation bar with breadcrumb navigation and cross-module switcher for the SOP feature. */
 export function TopBar({ children }: TopBarProps) {
   const { currentView, navigateToProcesses, navigateToList, getSelectedProcess, getSelectedSop } = useSOP();
 
@@ -48,7 +49,11 @@ export function TopBar({ children }: TopBarProps) {
           </>
         )}
       </div>
-      {children}
+
+      <div className="flex items-center gap-3">
+        {children}
+        <AppNav />
+      </div>
     </header>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useSOP } from "@/contexts/SOPContext";
 import { SOPStatus } from "@/types/sop";
 import { SOPStatusBadge } from "./SOPStatusBadge";
+import { InfoTooltip } from "@/components/shared/InfoTooltip";
 import { EzButton, EzInput, EzMenu, EzAlertDialog } from "@clarium/ezui-react-components";
 import {
   Plus, Search, Eye, Pencil, Trash2, FileText, Blocks, Lock, Clock, User, ChevronDown,
@@ -64,18 +65,29 @@ export function SOPList() {
       <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
         {/* Process Title */}
         {processName && (
-          <h2 className="text-lg font-semibold">{processName}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold">{processName}</h2>
+            <InfoTooltip
+              title={processName}
+              description="This business process groups related SOPs that govern how work is performed within this department or function. Each SOP follows a lifecycle: Draft → In Review → Approved → Effective."
+              tip="SOPs in 'Effective' status are locked and cannot be edited. Create a new version to make changes to an effective SOP."
+              side="bottom"
+            />
+          </div>
         )}
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4">
           {[
-            { label: "Total SOPs", value: stats.total, color: "text-foreground" },
-            { label: "Drafts", value: stats.draft, color: "text-status-draft" },
-            { label: "Under Review", value: stats.review, color: "text-status-review" },
-            { label: "Effective", value: stats.effective, color: "text-status-effective" },
+            { label: "Total SOPs", value: stats.total, color: "text-foreground", tooltip: "Total number of Standard Operating Procedures registered under this business process, across all lifecycle stages." },
+            { label: "Drafts", value: stats.draft, color: "text-status-draft", tooltip: "SOPs still being authored. Drafts can be freely edited and are not yet live." },
+            { label: "Under Review", value: stats.review, color: "text-status-review", tooltip: "SOPs submitted for review or already approved but not yet made effective. These are pending final sign-off." },
+            { label: "Effective", value: stats.effective, color: "text-status-effective", tooltip: "Locked, live SOPs governing current operations. Cannot be edited — create a new version instead." },
           ].map((stat) => (
             <div key={stat.label} className="rounded-xl border bg-card p-4">
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <div className="flex items-center gap-1">
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <InfoTooltip title={stat.label} description={stat.tooltip} side="bottom" iconSize={11} />
+              </div>
               <p className={cn("text-2xl font-bold mt-1", stat.color)}>{stat.value}</p>
             </div>
           ))}
@@ -172,7 +184,7 @@ export function SOPList() {
                       items={[
                         { label: "View", icon: <Eye className="h-4 w-4" />, onClick: () => navigateToView(sop.id) },
                         ...(!isEffective ? [{ label: "Edit", icon: <Pencil className="h-4 w-4" />, onClick: () => navigateToEdit(sop.id) }] : []),
-                        { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(sop.id), className: "text-destructive" },
+                        { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(sop.id) },
                       ]}
                     />
                   </div>

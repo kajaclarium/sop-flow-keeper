@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSOP } from "@/contexts/SOPContext";
+import { InfoTooltip } from "@/components/shared/InfoTooltip";
 import { EzButton, EzInput, EzDialog, EzAlertDialog } from "@clarium/ezui-react-components";
 import {
   Plus, FolderOpen, Pencil, Trash2, ArrowRight, FileText,
@@ -68,7 +69,15 @@ export function BusinessProcessList() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Business Processes</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight">Business Processes</h1>
+              <InfoTooltip
+                title="Business Processes"
+                description="Business Processes group related SOPs by department or function. Each process represents a major area of work in your organization (e.g., Facility Management, Human Resources)."
+                tip="Create a process for each department or major function. Then add SOPs under each to document how work is performed."
+                side="bottom"
+              />
+            </div>
             <p className="text-sm text-muted-foreground mt-1">
               Organize your SOPs by department or business process
             </p>
@@ -80,8 +89,8 @@ export function BusinessProcessList() {
 
         {/* Create/Edit Dialog */}
         <EzDialog
-          isOpen={dialogOpen}
-          onClose={resetForm}
+          open={dialogOpen}
+          onOpenChange={(open) => { if (!open) resetForm(); }}
           title={editingId ? "Edit Business Process" : "Create Business Process"}
         >
           <div className="space-y-4 py-2">
@@ -171,11 +180,12 @@ export function BusinessProcessList() {
 
         {/* Delete Confirmation */}
         <EzAlertDialog
-          isOpen={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
+          open={deleteDialogOpen}
+          onOpenChange={(open) => { if (!open) setDeleteDialogOpen(false); }}
           title={`Delete "${deletingBp?.name}"?`}
           description={`This will delete the business process and unlink ${deletingSopCount} SOP${deletingSopCount !== 1 ? "s" : ""}. The SOPs themselves won't be deleted.`}
           onConfirm={confirmDelete}
+          onCancel={() => setDeleteDialogOpen(false)}
           confirmLabel="Delete"
           cancelLabel="Cancel"
         />

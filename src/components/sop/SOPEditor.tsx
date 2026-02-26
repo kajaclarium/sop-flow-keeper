@@ -4,7 +4,8 @@ import { SOPFormat, SOPStep } from "@/types/sop";
 import { StepCard } from "./StepCard";
 import { FileUploadZone } from "./FileUploadZone";
 import { StatusWorkflow } from "./StatusWorkflow";
-import { EzButton, EzInput, EzSelect } from "@clarium/ezui-react-components";
+import { InfoTooltip } from "@/components/shared/InfoTooltip";
+import { EzButton, EzInput } from "@clarium/ezui-react-components";
 import {
   ArrowLeft,
   Plus,
@@ -204,7 +205,15 @@ export function SOPEditor({ mode }: SOPEditorProps) {
 
         {/* Metadata card */}
         <div className="rounded-xl border bg-card p-6 space-y-5">
-          <h2 className="text-lg font-semibold">Document Metadata</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold">Document Metadata</h2>
+            <InfoTooltip
+              title="Document Metadata"
+              description="Metadata includes the SOP's unique ID, version number, title, owner, and effective date. The ID and version are auto-generated. The effective date is set when the SOP reaches 'Effective' status."
+              tip="Choose a clear, descriptive title that makes this SOP easy to find. The owner should be the person responsible for keeping this document current."
+              side="right"
+            />
+          </div>
           <div className="grid grid-cols-2 gap-5">
             <EzInput
               label="SOP ID"
@@ -237,7 +246,7 @@ export function SOPEditor({ mode }: SOPEditorProps) {
         </div>
 
         {/* Format toggle */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center gap-2">
           <div className="inline-flex rounded-lg border bg-muted p-1">
             <EzButton
               variant={activeFormat === "block" ? "classic" : "text"}
@@ -256,6 +265,13 @@ export function SOPEditor({ mode }: SOPEditorProps) {
               File Wrapper
             </EzButton>
           </div>
+          <InfoTooltip
+            title="SOP Format"
+            description="Choose how to author this SOP. 'Block Builder' lets you create structured, step-by-step procedures inline. 'File Wrapper' lets you upload an existing document (PDF, DOCX) and optionally run AI analysis on it."
+            tip="Use Block Builder for new SOPs to ensure consistent structure. Use File Wrapper for existing documents you want to bring into the system."
+            side="right"
+            iconSize={13}
+          />
         </div>
 
         {/* Block Builder */}
