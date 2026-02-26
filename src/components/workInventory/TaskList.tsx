@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useWorkInventory, AVAILABLE_SOPS } from "@/contexts/WorkInventoryContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { RiskLevel, TaskIO, IOType } from "@/types/workInventory";
 import { RiskBadge } from "./RiskBadge";
 import { ControlStatusBadge } from "./ControlStatusBadge";
@@ -113,6 +114,10 @@ export function TaskList() {
     navigateToTaskDetail, getTaskControlStatus, selectedModuleId,
     getModuleKpiScore, getModuleRagStatus, getTaskKpiScore, getTaskWeight,
   } = useWorkInventory();
+  const { getRoleOptions } = useOrganization();
+
+  /** Role options from org structure for the owner dropdown. */
+  const roleOptions = getRoleOptions();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -333,10 +338,9 @@ export function TaskList() {
           <div className="space-y-4 py-2 max-h-[60vh] overflow-y-auto">
             <div className="grid grid-cols-2 gap-4">
               <EzInput label="Name" placeholder="e.g. Preventive Maintenance" value={name} onChange={(e) => setName(e.target.value)} required />
-              <EzInput label="Owner" placeholder="e.g. Maintenance Technician" value={owner} onChange={(e) => setOwner(e.target.value)} required />
+              <EzSelect label="Owner (Role)" placeholder="Select a role" options={roleOptions} value={owner || undefined} onValueChange={(v) => setOwner(v as string)} searchable clearable />
             </div>
             <EzTextarea label="Description" placeholder="Task description…" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-            <EzSelect label="Risk Level" options={RISK_OPTIONS} value={riskLevel} onValueChange={(v) => setRiskLevel(v as RiskLevel)} />
             <EzSelect label="Risk Level" options={RISK_OPTIONS} value={riskLevel} onValueChange={(v) => setRiskLevel(v as RiskLevel)} />
 
             <IOEditor items={inputs} onChange={setInputs} direction="input" />
@@ -458,7 +462,6 @@ export function TaskList() {
                       items={[
                         { label: "View", icon: <Eye className="h-4 w-4" />, onClick: () => navigateToTaskDetail(task.id) },
                         { label: "Edit", icon: <Pencil className="h-4 w-4" />, onClick: () => startEdit(task.id) },
-                        { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(task.id) },
                         { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(task.id) },
                       ]}
                     />

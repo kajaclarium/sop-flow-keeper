@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useWorkInventory } from "@/contexts/WorkInventoryContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { RiskLevel } from "@/types/workInventory";
 import { RiskBadge } from "./RiskBadge";
 import { ControlStatusBadge } from "./ControlStatusBadge";
@@ -28,6 +29,7 @@ export function ModuleList() {
     modules, tasks, createModule, updateModule, deleteModule,
     navigateToTasks, getTaskControlStatus, getModuleKpiScore, getModuleRagStatus,
   } = useWorkInventory();
+  const { getRoleOptions } = useOrganization();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -56,6 +58,9 @@ export function ModuleList() {
     setEditingId(null);
     setDialogOpen(false);
   };
+
+  /** Role options from org structure for the owner dropdown. */
+  const roleOptions = getRoleOptions();
 
   const startEdit = (id: string) => {
     const mod = modules.find((m) => m.id === id);
@@ -172,18 +177,19 @@ export function ModuleList() {
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
             />
-            <EzInput
+            <EzSelect
               label="Owner (Role)"
-              placeholder="e.g. Maintenance Manager"
-              value={owner}
-              onChange={(e) => setOwner(e.target.value)}
-              required
+              placeholder="Select a role from the catalog"
+              options={roleOptions}
+              value={owner || undefined}
+              onValueChange={(v) => setOwner(v as string)}
+              searchable
+              clearable
             />
             <EzSelect
               label="Risk Level"
               options={RISK_OPTIONS}
               value={riskLevel}
-              onValueChange={(v) => setRiskLevel(v as RiskLevel)}
               onValueChange={(v) => setRiskLevel(v as RiskLevel)}
             />
           </div>
@@ -314,7 +320,6 @@ export function ModuleList() {
           title={`Delete "${deletingMod?.name}"?`}
           description={`This will delete the module and all ${deletingTaskCount} associated task${deletingTaskCount !== 1 ? "s" : ""}. This action cannot be undone.`}
           onConfirm={confirmDelete}
-          onCancel={() => setDeleteDialogOpen(false)}
           onCancel={() => setDeleteDialogOpen(false)}
           confirmLabel="Delete"
           cancelLabel="Cancel"

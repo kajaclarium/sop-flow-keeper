@@ -186,7 +186,6 @@ export function BusinessProcessList() {
           description={`This will delete the business process and unlink ${deletingSopCount} SOP${deletingSopCount !== 1 ? "s" : ""}. The SOPs themselves won't be deleted.`}
           onConfirm={confirmDelete}
           onCancel={() => setDeleteDialogOpen(false)}
-          onCancel={() => setDeleteDialogOpen(false)}
           confirmLabel="Delete"
           cancelLabel="Cancel"
           variant="danger"

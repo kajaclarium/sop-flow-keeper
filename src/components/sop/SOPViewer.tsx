@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import { Link } from "react-router-dom";
 import { useSOP } from "@/contexts/SOPContext";
 import { SOPStatusBadge } from "./SOPStatusBadge";
 import { StatusWorkflow } from "./StatusWorkflow";
@@ -22,8 +21,6 @@ import {
   History,
   Sparkles,
   Download,
-  Boxes,
-  ListTodo,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -249,36 +246,6 @@ export function SOPViewer() {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Linked Work Inventory Tasks */}
-        <div className="rounded-xl border bg-card p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-sm font-semibold">
-              <Boxes className="h-4 w-4 text-primary" />
-              Linked Work Inventory Tasks
-            </h3>
-            <Link to="/work-inventory" className="no-underline">
-              <EzButton variant="text" size="small" icon={<ListTodo className="h-3.5 w-3.5" />}>
-                Open Work Inventory
-              </EzButton>
-            </Link>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Tasks in the Work Inventory that reference this SOP ({sop.id}) are visible in the Process Registry.
-            Navigate to Work Inventory to view and manage task-SOP linkages.
-          </p>
-          <Link to="/work-inventory" className="no-underline">
-            <div className="flex items-center gap-3 rounded-lg border border-dashed p-3 hover:bg-accent/50 transition-colors cursor-pointer">
-              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10 shrink-0">
-                <Boxes className="h-4 w-4 text-primary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">View in Work Inventory</p>
-                <p className="text-xs text-muted-foreground">See which process tasks are governed by this SOP</p>
-              </div>
-            </div>
-          </Link>
         </div>
 
         {/* Action bar */}
