@@ -75,7 +75,7 @@ export function TaskDetail() {
 
         {/* Uncontrolled Warning */}
         {controlStatus === "Uncontrolled" && (
-          <EzAlert severity="danger">
+          <EzAlert variant="danger">
             <p className="text-sm font-medium">No Active SOP Linked</p>
             <p className="text-xs mt-0.5">
               This task has no linked Standard Operating Procedure and is flagged as <strong>Uncontrolled</strong>.

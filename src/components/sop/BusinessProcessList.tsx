@@ -80,8 +80,8 @@ export function BusinessProcessList() {
 
         {/* Create/Edit Dialog */}
         <EzDialog
-          isOpen={dialogOpen}
-          onClose={resetForm}
+          open={dialogOpen}
+          onOpenChange={(isOpen) => { if (!isOpen) resetForm(); }}
           title={editingId ? "Edit Business Process" : "Create Business Process"}
         >
           <div className="space-y-4 py-2">
@@ -171,13 +171,15 @@ export function BusinessProcessList() {
 
         {/* Delete Confirmation */}
         <EzAlertDialog
-          isOpen={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
+          open={deleteDialogOpen}
+          onOpenChange={(isOpen) => { if (!isOpen) setDeleteDialogOpen(false); }}
           title={`Delete "${deletingBp?.name}"?`}
           description={`This will delete the business process and unlink ${deletingSopCount} SOP${deletingSopCount !== 1 ? "s" : ""}. The SOPs themselves won't be deleted.`}
           onConfirm={confirmDelete}
+          onCancel={() => setDeleteDialogOpen(false)}
           confirmLabel="Delete"
           cancelLabel="Cancel"
+          variant="danger"
         />
       </div>
     </div>
