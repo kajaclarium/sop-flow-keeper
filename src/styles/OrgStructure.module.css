@@ -21,7 +21,7 @@
   font-family: 'DM Sans', sans-serif;
   background: var(--bg);
   color: var(--text);
-  height: calc(100vh - 56px); /* Adjust based on main topbar height */
+  height: 100%; /* Fills the app-main content area */
   display: flex;
   flex-direction: column;
   overflow: hidden;

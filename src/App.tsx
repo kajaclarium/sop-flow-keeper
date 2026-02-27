@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AppLayout } from "./components/AppLayout";
 import Index from "./pages/Index";
 import WorkInventory from "./pages/WorkInventory";
 import NotFound from "./pages/NotFound";
@@ -13,11 +14,16 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/work-inventory" element={<WorkInventory />} />
-          <Route path="*" element={<NotFound />} />
+          {/* Layout route — sidebar + content */}
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/work-inventory" element={<WorkInventory />} />
+            <Route path="/org_structure" element={<Org_Structure />} />
+          </Route>
+
+          {/* Standalone pages (no sidebar) */}
           <Route path="/orgstructure_new" element={<OrgStructure_New />} />
-          <Route path="/org_structure" element={<Org_Structure />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
