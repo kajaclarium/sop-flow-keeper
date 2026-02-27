@@ -164,11 +164,23 @@ export default function OrgStructure() {
                     </div>
                 </div>
                 <div className={styles.topbarRight}>
-                    <EzButton variant="ghost" onClick={handleExport} size="sm" className="gap-2">
-                        <Download className="h-3.5 w-3.5" /> Export
+                    <EzButton
+                        variant="outlined"
+                        severity="secondary"
+                        size="small"
+                        icon={<Download className="h-3.5 w-3.5" />}
+                        onClick={handleExport}
+                    >
+                        Export
                     </EzButton>
-                    <EzButton variant="primary" onClick={() => { setEditingRole(null); setIsRoleModalOpen(true); }} size="sm" className="gap-2">
-                        <Plus className="h-3.5 w-3.5" /> Add Role
+                    <EzButton
+                        variant="classic"
+                        severity="primary"
+                        size="small"
+                        icon={<Plus className="h-3.5 w-3.5" />}
+                        onClick={() => { setEditingRole(null); setIsRoleModalOpen(true); }}
+                    >
+                        Add Role
                     </EzButton>
                 </div>
             </div>
