@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { EzButton, EzInput, EzSelect } from "@clarium/ezui-react-components";
+import { EzButton, EzInput, EzSelect, EzTextarea } from "@clarium/ezui-react-components";
 import { X, Building2, Save } from "lucide-react";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { cn } from "@/lib/utils";
@@ -152,7 +152,7 @@ export function CreateDepartmentPanel({ isOpen, onClose, editingId }: CreateDepa
             required
           />
 
-          <EzInput
+          <EzTextarea
             label="Description"
             placeholder="Brief description of department responsibilities"
             value={description}

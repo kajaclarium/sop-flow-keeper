@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 /** Navigation items for the application modules, constructed dynamically per department. */
 const buildNavItems = (departmentId: string) => [
   { path: `/department/${departmentId}/sop`, label: "SOP Management", shortLabel: "SOPs", icon: ShieldCheck },
-  { path: `/department/${departmentId}/work-inventory`, label: "Work Inventory", shortLabel: "Inventory", icon: Boxes },
+  { path: `/department/${departmentId}/work-inventory`, label: "Work Inventory", shortLabel: "Processes", icon: Boxes },
 ];
 
 /** Unified navigation bar shared across all modules for seamless cross-module switching. */

@@ -94,13 +94,13 @@ export function SOPList() {
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-6">
           <div className="flex-1 max-w-sm">
             <EzInput
               placeholder="Search SOPs…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+              prefix={<Search size={16} />}
             />
           </div>
           <div className="flex items-center gap-1.5">
