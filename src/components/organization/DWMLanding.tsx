@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EzButton, EzAlertDialog } from "@clarium/ezui-react-components";
-import { Plus, Network, Building2, ShieldCheck, Boxes, Crown, Users } from "lucide-react";
+import { Plus, Network, Building2, ShieldCheck, Boxes, Crown, LayoutGrid } from "lucide-react";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { DWMTopBar } from "@/components/organization/DWMTopBar";
+import { AppNav } from "@/components/shared/AppNav";
 import { OrgTree } from "@/components/organization/OrgTree";
 import { CreateDepartmentPanel } from "@/components/organization/CreateDepartmentPanel";
 import { cn } from "@/lib/utils";
@@ -50,7 +50,19 @@ export function DWMLanding() {
 
   return (
     <div className="flex flex-col min-h-screen w-full">
-      <DWMTopBar />
+      {/* Standard sticky top bar — same as all module pages */}
+      <header className="flex items-center justify-between px-6 h-14 border-b bg-card shrink-0 sticky top-0 z-30">
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary shrink-0">
+            <LayoutGrid className="h-4 w-4 text-primary-foreground" />
+          </div>
+          <div>
+            <span className="text-sm font-semibold tracking-tight">DWM</span>
+            <p className="text-[10px] text-muted-foreground leading-none">Daily Work Management</p>
+          </div>
+        </div>
+        <AppNav />
+      </header>
 
       <div className="flex-1 overflow-y-auto overflow-x-auto">
         <div className="min-w-fit px-6 py-8">

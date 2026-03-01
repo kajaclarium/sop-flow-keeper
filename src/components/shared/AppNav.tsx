@@ -1,98 +1,143 @@
-import { Link, useLocation, useParams } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { EzButton } from "@clarium/ezui-react-components";
 import {
-  ShieldCheck, Boxes, ArrowLeftRight, LayoutGrid,
+  ShieldCheck, Boxes, Network, LayoutGrid, ChevronDown, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Navigation items for the application modules, constructed dynamically per department. */
-const buildNavItems = (departmentId: string) => [
-  { path: `/department/${departmentId}/sop`, label: "SOP Management", shortLabel: "SOPs", icon: ShieldCheck },
-  { path: `/department/${departmentId}/work-inventory`, label: "Work Inventory", shortLabel: "Processes", icon: Boxes },
-];
-
 /** Unified navigation bar shared across all modules for seamless cross-module switching. */
 export function AppNav() {
+  const navigate = useNavigate();
   const location = useLocation();
   const { departmentId } = useParams<{ departmentId: string }>();
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const currentPath = location.pathname;
+
+  /** Close dropdown when clicking outside. */
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   /* If no departmentId is available, only show the DWM home link */
   if (!departmentId) {
     return (
-      <nav className="flex items-center gap-1 px-1 py-1 rounded-lg bg-muted/50 border">
+      <nav className="flex items-center">
         <Link to="/" className="no-underline">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground shadow-sm">
-            <LayoutGrid className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Home</span>
-          </div>
+          <EzButton variant="text" icon={<LayoutGrid className="h-4 w-4" />}>
+            Home
+          </EzButton>
         </Link>
       </nav>
     );
   }
 
-  const navItems = buildNavItems(departmentId);
+  const isSopActive = currentPath.includes("/sop");
+  const isInventoryActive = currentPath.includes("/work-inventory");
+  const isOrgActive = currentPath.includes("/org-structure");
+
+  const activeModule = isSopActive 
+    ? { label: "SOP Vault", icon: ShieldCheck, color: "text-primary" }
+    : isInventoryActive 
+    ? { label: "Work Inventory", icon: Boxes, color: "text-primary" }
+    : isOrgActive
+    ? { label: "Org Structure", icon: Network, color: "text-primary" }
+    : { label: "DWM Hub", icon: LayoutGrid, color: "text-muted-foreground" };
+
+  const menuItems = [
+    {
+      id: "sop",
+      label: "SOP Management",
+      icon: ShieldCheck,
+      active: isSopActive,
+      onClick: () => navigate(`/department/${departmentId}/sop`),
+    },
+    {
+      id: "inventory",
+      label: "Work Inventory",
+      icon: Boxes,
+      active: isInventoryActive,
+      onClick: () => navigate(`/department/${departmentId}/work-inventory`),
+    },
+    {
+      id: "org",
+      label: "Org Structure",
+      icon: Network,
+      active: isOrgActive,
+      onClick: () => navigate("/org-structure"),
+    },
+    {
+      id: "home",
+      label: "Back to Home",
+      icon: LayoutGrid,
+      active: false,
+      onClick: () => navigate("/"),
+      isSecondary: true,
+    },
+  ];
 
   return (
-    <nav className="flex items-center gap-1 px-1 py-1 rounded-lg bg-muted/50 border">
-      {/* Home link back to DWM landing */}
-      <Link to="/" className="no-underline">
-        <div
-          className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer",
-            "text-muted-foreground hover:text-foreground hover:bg-accent"
-          )}
-        >
-          <LayoutGrid className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Home</span>
-        </div>
-      </Link>
-
-      {/* Module tabs */}
-      {navItems.map((item) => {
-        const isActive = currentPath.startsWith(item.path);
-        const Icon = item.icon;
-        return (
-          <Link key={item.path} to={item.path} className="no-underline">
-            <div
-              className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer",
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
-              )}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{item.shortLabel}</span>
-            </div>
-          </Link>
-        );
-      })}
-    </nav>
-  );
-}
-
-/** Quick switch button that navigates to the other module — ideal for embedding in context. */
-export function QuickSwitch() {
-  const location = useLocation();
-  const { departmentId } = useParams<{ departmentId: string }>();
-
-  /* Without a departmentId, quick switch is not meaningful */
-  if (!departmentId) return null;
-
-  const isOnSop = location.pathname.includes("/sop");
-  const target = isOnSop
-    ? `/department/${departmentId}/work-inventory`
-    : `/department/${departmentId}/sop`;
-  const targetLabel = isOnSop ? "Work Inventory" : "SOP Management";
-  const TargetIcon = isOnSop ? Boxes : ShieldCheck;
-
-  return (
-    <Link to={target} className="no-underline">
-      <EzButton variant="outlined" size="small" icon={<TargetIcon className="h-3.5 w-3.5" />}>
-        <span className="hidden sm:inline">{targetLabel}</span>
-        <ArrowLeftRight className="h-3 w-3 ml-1 sm:hidden" />
+    <div ref={containerRef} className="relative">
+      <EzButton 
+        variant="text" 
+        className={cn(
+          "h-9 px-3 gap-2 hover:bg-accent/50 group transition-all duration-200",
+          isOpen && "bg-accent/50"
+        )}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <activeModule.icon className={cn("h-4 w-4 transition-colors", activeModule.color)} />
+        <span className="text-xs font-semibold hidden md:inline">
+          {activeModule.label}
+        </span>
+        <ChevronDown className={cn(
+          "h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-transform duration-200",
+          isOpen && "rotate-180 text-foreground"
+        )} />
       </EzButton>
-    </Link>
+
+      {isOpen && (
+        <div className="absolute top-full right-0 mt-1.5 w-56 z-50 rounded-xl border bg-popover shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="p-1.5">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.id}>
+                  {item.isSecondary && <div className="mx-2 my-1.5 border-t" />}
+                  <button
+                    onClick={() => {
+                      item.onClick();
+                      setIsOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-150",
+                      item.active 
+                        ? "bg-primary/10 text-primary font-medium" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon className={cn("h-4 w-4", item.active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                      <span>{item.label}</span>
+                    </div>
+                    {item.active && <Check className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
+
+
+

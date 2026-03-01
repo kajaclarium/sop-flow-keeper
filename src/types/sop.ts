@@ -1,3 +1,5 @@
+import { TaskIO } from "./common";
+
 export type SOPStatus = "Draft" | "In Review" | "Approved" | "Effective";
 export type SOPFormat = "block" | "file";
 
@@ -7,6 +9,8 @@ export interface SOPStep {
   requirePhoto: boolean;
   requireEvidenceFile: boolean;
   requireMeasurement: boolean;
+  inputs: TaskIO[];
+  outputs: TaskIO[];
 }
 
 export interface SOPVersion {

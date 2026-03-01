@@ -19,9 +19,9 @@ interface DepartmentCardProps {
 export function DepartmentCard({ department, hasChildren, onEdit, onDelete }: DepartmentCardProps) {
   const navigate = useNavigate();
 
-  /** Navigate into the department's SOP page on card click. */
+  /** Navigate into the department's Process (Work Inventory) page on card click. */
   const handleClick = () => {
-    navigate(`/department/${department.id}/sop`);
+    navigate(`/department/${department.id}/work-inventory`);
   };
 
   return (

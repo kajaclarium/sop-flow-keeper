@@ -21,6 +21,8 @@ import {
   History,
   Sparkles,
   Download,
+  ArrowDownToLine,
+  ArrowUpFromLine,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -170,6 +172,42 @@ export function SOPViewer() {
                         )}
                       </div>
                     )}
+
+                    {/* Step Inputs & Outputs */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                      {step.inputs.length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                            <ArrowDownToLine className="h-3 w-3 text-blue-500" />
+                            Inputs
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {step.inputs.map(io => (
+                              <div key={io.id} className="px-2 py-0.5 rounded-md border bg-blue-50/50 text-blue-700 text-[10px] font-medium flex items-center gap-1">
+                                {io.label}
+                                <span className="text-[8px] opacity-70 border-l border-blue-200 pl-1 uppercase">{io.type}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {step.outputs.length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                            <ArrowUpFromLine className="h-3 w-3 text-emerald-500" />
+                            Outputs
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {step.outputs.map(io => (
+                              <div key={io.id} className="px-2 py-0.5 rounded-md border bg-emerald-50/50 text-emerald-700 text-[10px] font-medium flex items-center gap-1">
+                                {io.label}
+                                <span className="text-[8px] opacity-70 border-l border-emerald-200 pl-1 uppercase">{io.type}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

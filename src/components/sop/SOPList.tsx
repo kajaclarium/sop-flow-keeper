@@ -1,11 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useSOP } from "@/contexts/SOPContext";
+import { useWorkInventory } from "@/contexts/WorkInventoryContext";
 import { SOPStatus } from "@/types/sop";
 import { SOPStatusBadge } from "./SOPStatusBadge";
 import { InfoTooltip } from "@/components/shared/InfoTooltip";
 import { EzButton, EzInput, EzMenu, EzAlertDialog } from "@clarium/ezui-react-components";
 import {
   Plus, Search, Eye, Pencil, Trash2, FileText, Blocks, Lock, Clock, User, ChevronDown,
+  Boxes, ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +17,9 @@ const STATUS_FILTERS: (SOPStatus | "All")[] = ["All", "Draft", "In Review", "App
 /** Lists all SOPs for the selected business process with search, status filtering, and CRUD actions. */
 export function SOPList() {
   const { sops, navigateToCreate, navigateToView, navigateToEdit, deleteSop, selectedProcessId, getSelectedProcess } = useSOP();
+  const { allTasks, navigateToTasks, navigateToTaskDetail } = useWorkInventory();
+  const navigate = useNavigate();
+  const { departmentId } = useParams<{ departmentId: string }>();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<SOPStatus | "All">("All");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -59,6 +65,23 @@ export function SOPList() {
   };
 
   const deletingSop = deletingSopId ? sops.find((s) => s.id === deletingSopId) : null;
+
+  /**
+   * Reverse lookup: given a sopId, find all tasks in the work inventory that
+   * list this SOP in their `linkedSopIds`.
+   */
+  const getLinkedTasks = (sopId: string) =>
+    allTasks.filter((t) => t.linkedSopIds.includes(sopId));
+
+  /**
+   * Navigate to Work Inventory and deep-link directly to the task via URL search param.
+   * The WorkInventory page reads `?taskId=` on mount and auto-selects the task.
+   * This is cross-page safe — context state mutations don't survive page transitions.
+   */
+  const handleTaskClick = (e: React.MouseEvent, taskId: string) => {
+    e.stopPropagation();
+    navigate(`/department/${departmentId}/work-inventory?taskId=${taskId}`);
+  };
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -133,60 +156,107 @@ export function SOPList() {
               const isEffective = sop.status === "Effective";
               /* Check if this SOP has a newer effective version (i.e., it's superseded) */
               const isSuperseded = !isEffective && sop.versions.length > 1 && sop.versions.some(v => v.status === "Effective" && v.version !== sop.currentVersion);
+              const linkedTasks = getLinkedTasks(sop.id);
               return (
-                <div
-                  key={sop.id}
-                  className={cn(
-                    "flex items-center gap-4 px-5 py-4 rounded-xl border bg-card transition-all hover:shadow-sm cursor-pointer group",
-                    isEffective && "border-status-effective/30 bg-status-effective-bg/30 ring-1 ring-status-effective/10",
-                    isSuperseded && "opacity-50"
-                  )}
-                  onClick={() => navigateToView(sop.id)}
-                >
-                  <div className={cn(
-                    "flex items-center justify-center h-9 w-9 rounded-lg shrink-0",
-                    sop.format === "block" ? "bg-primary/10" : "bg-muted"
-                  )}>
-                    {sop.format === "block" ? (
-                      <Blocks className="h-4 w-4 text-primary" />
-                    ) : (
-                      <FileText className="h-4 w-4 text-muted-foreground" />
+                <div key={sop.id} className="rounded-xl border bg-card overflow-hidden transition-all hover:shadow-sm group">
+                  {/* Main SOP row */}
+                  <div
+                    className={cn(
+                      "flex items-center gap-4 px-5 py-4 cursor-pointer",
+                      isEffective && "border-b-0 bg-status-effective-bg/30",
+                      isSuperseded && "opacity-50"
                     )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-muted-foreground">{sop.id}</span>
-                      {isEffective && <Lock className="h-3 w-3 text-status-effective" />}
+                    onClick={() => navigateToView(sop.id)}
+                  >
+                    <div className={cn(
+                      "flex items-center justify-center h-9 w-9 rounded-lg shrink-0",
+                      sop.format === "block" ? "bg-primary/10" : "bg-muted"
+                    )}>
+                      {sop.format === "block" ? (
+                        <Blocks className="h-4 w-4 text-primary" />
+                      ) : (
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                      )}
                     </div>
-                    <p className={cn("text-sm font-medium truncate", isSuperseded && "line-through text-muted-foreground")}>{sop.title}</p>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-muted-foreground">{sop.id}</span>
+                        {isEffective && <Lock className="h-3 w-3 text-status-effective" />}
+                      </div>
+                      <p className={cn("text-sm font-medium truncate", isSuperseded && "line-through text-muted-foreground")}>{sop.title}</p>
+                    </div>
+
+                    <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+                      <User className="h-3 w-3" /> {sop.owner}
+                    </div>
+
+                    <span className={cn("text-xs font-mono shrink-0", isEffective ? "text-status-effective font-semibold" : "text-muted-foreground")}>
+                      {sop.currentVersion}
+                    </span>
+
+                    <SOPStatusBadge status={sop.status} />
+
+                    <div className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground shrink-0 w-24">
+                      <Clock className="h-3 w-3" /> {sop.effectiveDate || sop.createdAt}
+                    </div>
+
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <EzMenu
+                        trigger={
+                          <EzButton variant="text" className="shrink-0 opacity-0 group-hover:opacity-100" icon={<ChevronDown className="h-4 w-4" />} aria-label="Actions" />
+                        }
+                        items={[
+                          { label: "View", icon: <Eye className="h-4 w-4" />, onClick: () => navigateToView(sop.id) },
+                          ...(!isEffective ? [{ label: "Edit", icon: <Pencil className="h-4 w-4" />, onClick: () => navigateToEdit(sop.id) }] : []),
+                          { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(sop.id) },
+                        ]}
+                      />
+                    </div>
                   </div>
 
-                  <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
-                    <User className="h-3 w-3" /> {sop.owner}
-                  </div>
+                  {/* Linked Tasks sub-row — bi-directional traceability for admins */}
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 px-5 py-2.5 border-t bg-muted/20 flex-wrap",
+                      linkedTasks.length === 0 && "opacity-60"
+                    )}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
+                      <Boxes className="h-3 w-3" />
+                      <span>Linked Tasks</span>
+                    </div>
 
-                  <span className={cn("text-xs font-mono shrink-0", isEffective ? "text-status-effective font-semibold" : "text-muted-foreground")}>
-                    {sop.currentVersion}
-                  </span>
-
-                  <SOPStatusBadge status={sop.status} />
-
-                  <div className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground shrink-0 w-24">
-                    <Clock className="h-3 w-3" /> {sop.effectiveDate || sop.createdAt}
-                  </div>
-
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <EzMenu
-                      trigger={
-                        <EzButton variant="text" className="shrink-0 opacity-0 group-hover:opacity-100" icon={<ChevronDown className="h-4 w-4" />} aria-label="Actions" />
-                      }
-                      items={[
-                        { label: "View", icon: <Eye className="h-4 w-4" />, onClick: () => navigateToView(sop.id) },
-                        ...(!isEffective ? [{ label: "Edit", icon: <Pencil className="h-4 w-4" />, onClick: () => navigateToEdit(sop.id) }] : []),
-                        { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => openDeleteDialog(sop.id) },
-                      ]}
-                    />
+                    {linkedTasks.length === 0 ? (
+                      <span className="text-[11px] text-muted-foreground italic">No tasks linked to this SOP</span>
+                    ) : (
+                      <>
+                        {/* Show first 3 tasks as direct chips */}
+                        {linkedTasks.slice(0, 3).map((task) => (
+                          <button
+                            key={task.id}
+                            onClick={(e) => handleTaskClick(e, task.id)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/8 border border-primary/20 text-[11px] font-medium text-primary hover:bg-primary/15 transition-colors cursor-pointer group/task"
+                            title={`Go to task ${task.id} in Work Inventory`}
+                          >
+                            <span className="font-mono text-[10px] text-primary/60">{task.id}</span>
+                            <span className="truncate max-w-[120px]">{task.name}</span>
+                            <ExternalLink className="h-3 w-3 opacity-0 group-hover/task:opacity-100 transition-opacity shrink-0" />
+                          </button>
+                        ))}
+                        
+                        {/* Summarize remaining tasks */}
+                        {linkedTasks.length > 3 && (
+                          <div 
+                            className="px-2 py-1 rounded-full bg-muted border border-border text-[10px] font-bold text-muted-foreground cursor-help"
+                            title={linkedTasks.slice(3).map(t => `${t.id}: ${t.name}`).join('\n')}
+                          >
+                            +{linkedTasks.length - 3} more
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               );

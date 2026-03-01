@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useWorkInventory, AVAILABLE_SOPS, SOP_TITLE_MAP } from "@/contexts/WorkInventoryContext";
-import { TaskIO, IOType } from "@/types/workInventory";
+import { TaskIO, IOType, IO_TYPE_OPTIONS } from "@/types/common";
 import { RiskBadge } from "./RiskBadge";
 import { ControlStatusBadge } from "./ControlStatusBadge";
 import { InfoTooltip } from "@/components/shared/InfoTooltip";
@@ -13,13 +13,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const IO_TYPES: IOType[] = ["document", "material", "data", "approval", "other"];
-
-/** I/O type options formatted for EzSelect. */
-const IO_TYPE_OPTIONS = IO_TYPES.map((t) => ({ label: t.charAt(0).toUpperCase() + t.slice(1), value: t }));
-
-/** Visual styles for I/O type badges. */
-const IO_TYPE_STYLES: Record<string, string> = {
+/** Visual styles for I/O type badges. Shared across the application. */
+export const IO_TYPE_STYLES: Record<string, string> = {
   document: "bg-blue-50 text-blue-700 border-blue-200",
   material: "bg-amber-50 text-amber-700 border-amber-200",
   data: "bg-violet-50 text-violet-700 border-violet-200",

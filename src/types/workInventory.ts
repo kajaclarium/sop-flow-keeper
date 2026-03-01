@@ -1,13 +1,7 @@
+import { TaskIO, IOType } from "./common";
+
 export type RiskLevel = "Low" | "Medium" | "High" | "Critical";
 export type ControlStatus = "Controlled" | "Uncontrolled";
-export type IOType = "document" | "material" | "data" | "approval" | "other";
-
-export interface TaskIO {
-    id: string;
-    label: string;
-    type: IOType;
-    description: string;
-}
 
 export interface WorkModule {
     id: string;

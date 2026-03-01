@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { SOPProvider, useSOP } from "@/contexts/SOPContext";
+import { WorkInventoryProvider } from "@/contexts/WorkInventoryContext";
 import { TopBar } from "@/components/sop/TopBar";
 import { SOPList } from "@/components/sop/SOPList";
 import { SOPEditor } from "@/components/sop/SOPEditor";
@@ -26,7 +27,11 @@ export default function Index() {
 
   return (
     <SOPProvider departmentId={departmentId}>
-      <SOPApp />
+      {/* WorkInventoryProvider needed by TopBar's GlobalSearch for cross-module task navigation */}
+      <WorkInventoryProvider departmentId={departmentId}>
+        <SOPApp />
+      </WorkInventoryProvider>
     </SOPProvider>
   );
 }
+

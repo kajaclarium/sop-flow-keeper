@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 import { SOPRecord, SOPStep, SOPStatus, SOPFormat, SOPVersion, AppView, BusinessProcess } from "@/types/sop";
+import { generateTaskIOs } from "@/utils/taskIoGenerator";
+import { TaskIO } from "@/types/common";
 
 const generateId = () => `SOP-${String(Math.floor(Math.random() * 900) + 100).padStart(3, "0")}`;
 const generateBPId = () => `BP-${String(Math.floor(Math.random() * 900) + 100).padStart(3, "0")}`;
@@ -18,10 +20,10 @@ const INITIAL_SOPS: SOPRecord[] = [
     lastEditedBy: "Sarah Chen", approvedBy: "James Rodriguez", currentVersion: "v2.1",
     status: "Effective", effectiveDate: "2026-01-15", createdAt: "2025-08-10", businessProcessId: "BP-001",
     steps: [
-      { id: "s1", instruction: "Prepare cleaning solution according to MSDS guidelines.", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: true },
-      { id: "s2", instruction: "Begin with high-touch surfaces: door handles, light switches, railings.", requirePhoto: true, requireEvidenceFile: false, requireMeasurement: false },
-      { id: "s3", instruction: "Mop floors using approved disinfectant. Allow 10-minute dwell time.", requirePhoto: false, requireEvidenceFile: true, requireMeasurement: true },
-      { id: "s4", instruction: "Document completion and any anomalies in the facility log.", requirePhoto: true, requireEvidenceFile: false, requireMeasurement: false },
+      { id: "s1", instruction: "Prepare cleaning solution according to MSDS guidelines.", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: true, ...generateTaskIOs("Prepare cleaning solution") },
+      { id: "s2", instruction: "Begin with high-touch surfaces: door handles, light switches, railings.", requirePhoto: true, requireEvidenceFile: false, requireMeasurement: false, ...generateTaskIOs("Clean surfaces") },
+      { id: "s3", instruction: "Mop floors using approved disinfectant. Allow 10-minute dwell time.", requirePhoto: false, requireEvidenceFile: true, requireMeasurement: true, ...generateTaskIOs("Mop floors") },
+      { id: "s4", instruction: "Document completion and any anomalies in the facility log.", requirePhoto: true, requireEvidenceFile: false, requireMeasurement: false, ...generateTaskIOs("Document completion") },
     ],
     versions: [
       { version: "v1.0", createdAt: "2025-08-10", createdBy: "Sarah Chen", status: "Effective", steps: [] },
@@ -44,9 +46,9 @@ const INITIAL_SOPS: SOPRecord[] = [
     lastEditedBy: "Emily Park", approvedBy: null, currentVersion: "v1.0",
     status: "In Review", effectiveDate: null, createdAt: "2026-02-01", businessProcessId: "BP-003",
     steps: [
-      { id: "s1", instruction: "Identify and classify the incident severity (Critical, Major, Minor).", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false },
-      { id: "s2", instruction: "Notify the incident commander and assemble the response team.", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false },
-      { id: "s3", instruction: "Contain the incident and document initial findings with photos.", requirePhoto: true, requireEvidenceFile: true, requireMeasurement: false },
+      { id: "s1", instruction: "Identify and classify the incident severity (Critical, Major, Minor).", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false, ...generateTaskIOs("Identify incident") },
+      { id: "s2", instruction: "Notify the incident commander and assemble the response team.", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false, ...generateTaskIOs("Notify commander") },
+      { id: "s3", instruction: "Contain the incident and document initial findings with photos.", requirePhoto: true, requireEvidenceFile: true, requireMeasurement: false, ...generateTaskIOs("Contain incident") },
     ],
     versions: [{ version: "v1.0", createdAt: "2026-02-01", createdBy: "Emily Park", status: "In Review", steps: [] }],
   },
@@ -55,8 +57,8 @@ const INITIAL_SOPS: SOPRecord[] = [
     lastEditedBy: "James Rodriguez", approvedBy: null, currentVersion: "v0.3",
     status: "Draft", effectiveDate: null, createdAt: "2026-02-10", businessProcessId: "BP-003",
     steps: [
-      { id: "s1", instruction: "Categorize waste type per EPA classification.", requirePhoto: false, requireEvidenceFile: true, requireMeasurement: true },
-      { id: "s2", instruction: "Use appropriate PPE and containment vessels.", requirePhoto: true, requireEvidenceFile: false, requireMeasurement: false },
+      { id: "s1", instruction: "Categorize waste type per EPA classification.", requirePhoto: false, requireEvidenceFile: true, requireMeasurement: true, ...generateTaskIOs("Categorize waste") },
+      { id: "s2", instruction: "Use appropriate PPE and containment vessels.", requirePhoto: true, requireEvidenceFile: false, requireMeasurement: false, ...generateTaskIOs("Use PPE") },
     ],
     versions: [
       { version: "v0.1", createdAt: "2026-02-10", createdBy: "James Rodriguez", status: "Draft", steps: [] },
@@ -75,9 +77,9 @@ const INITIAL_SOPS: SOPRecord[] = [
     lastEditedBy: "Sarah Chen", approvedBy: "James Rodriguez", currentVersion: "v3.0",
     status: "Effective", effectiveDate: "2026-02-01", createdAt: "2025-03-10", businessProcessId: "BP-002",
     steps: [
-      { id: "s1", instruction: "Verify all critical databases are included in the backup scope.", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false },
-      { id: "s2", instruction: "Run incremental backup and verify checksums.", requirePhoto: false, requireEvidenceFile: true, requireMeasurement: true },
-      { id: "s3", instruction: "Test recovery on staging environment. Record RTO/RPO metrics.", requirePhoto: true, requireEvidenceFile: true, requireMeasurement: true },
+      { id: "s1", instruction: "Verify all critical databases are included in the backup scope.", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false, ...generateTaskIOs("Verify databases") },
+      { id: "s2", instruction: "Run incremental backup and verify checksums.", requirePhoto: false, requireEvidenceFile: true, requireMeasurement: true, ...generateTaskIOs("Run backup") },
+      { id: "s3", instruction: "Test recovery on staging environment. Record RTO/RPO metrics.", requirePhoto: true, requireEvidenceFile: true, requireMeasurement: true, ...generateTaskIOs("Test recovery") },
     ],
     versions: [
       { version: "v1.0", createdAt: "2025-03-10", createdBy: "David Kim", status: "Effective", steps: [] },
@@ -140,8 +142,8 @@ export function SOPProvider({ children, departmentId }: { children: React.ReactN
   const createSop = useCallback((title: string, format: SOPFormat, owner: string, steps?: SOPStep[]) => {
     const id = generateId();
     const now = new Date().toISOString().split("T")[0];
-    const defaultSteps = format === "block"
-      ? [{ id: generateStepId(), instruction: "", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false }]
+    const defaultSteps: SOPStep[] = format === "block"
+      ? [{ id: generateStepId(), instruction: "", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false, inputs: [], outputs: [] }]
       : [];
     const newSop: SOPRecord = {
       id, title, format, owner, lastEditedBy: owner, approvedBy: null,
@@ -188,7 +190,7 @@ export function SOPProvider({ children, departmentId }: { children: React.ReactN
 
   const addStep = useCallback((sopId: string) => {
     setSops((prev) => prev.map((s) =>
-      s.id === sopId ? { ...s, steps: [...s.steps, { id: generateStepId(), instruction: "", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false }] } : s
+      s.id === sopId ? { ...s, steps: [...s.steps, { id: generateStepId(), instruction: "", requirePhoto: false, requireEvidenceFile: false, requireMeasurement: false, inputs: [], outputs: [] }] } : s
     ));
   }, []);
 

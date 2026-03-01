@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
-import { WorkModule, WorkTask, TaskIO, RiskLevel, WorkInventoryView, ControlStatus } from "@/types/workInventory";
+import { WorkModule, WorkTask, RiskLevel, WorkInventoryView, ControlStatus } from "@/types/workInventory";
+import { TaskIO, IOType } from "@/types/common";
+import { generateTaskIOs } from "@/utils/taskIoGenerator";
 
 const generateModuleId = () => `MOD-${String(Math.floor(Math.random() * 900) + 100).padStart(3, "0")}`;
 const generateTaskId = () => `TSK-${String(Math.floor(Math.random() * 900) + 100).padStart(3, "0")}`;
@@ -74,34 +76,48 @@ const INITIAL_TASKS: WorkTask[] = [
   // Recruitment Flow
   {
     id: "TSK-HR-001", moduleId: "MOD-HR-001", operation: "Screening", name: "Resume Review", description: "Reviewing candidate resumes against job requisitions.",
-    owner: "HR Manager", riskLevel: "Low", inputs: [], outputs: [], linkedSopIds: [], createdAt: "2026-03-01",
+    owner: "HR Manager", riskLevel: "Low", 
+    ...generateTaskIOs("Resume Review"),
+    linkedSopIds: [], createdAt: "2026-03-01",
   },
   {
     id: "TSK-HR-002", moduleId: "MOD-HR-001", operation: "Selection", name: "Interview Panel", description: "Conducting panel interviews with qualified candidates.",
-    owner: "HR Manager", riskLevel: "Medium", inputs: [], outputs: [], linkedSopIds: [], createdAt: "2026-03-01",
+    owner: "HR Manager", riskLevel: "Medium", 
+    ...generateTaskIOs("Interview Panel"),
+    linkedSopIds: [], createdAt: "2026-03-01",
   },
   // Onboarding Flow
   {
     id: "TSK-HR-003", moduleId: "MOD-HR-002", operation: "Setup", name: "IT Equipment Provision", description: "Provisioning hardware and system access for new hires.",
-    owner: "IT Manager", riskLevel: "Medium", inputs: [], outputs: [], linkedSopIds: [], createdAt: "2026-03-01",
+    owner: "IT Manager", riskLevel: "Medium", 
+    ...generateTaskIOs("IT Equipment Provision"),
+    linkedSopIds: [], createdAt: "2026-03-01",
   },
   {
     id: "TSK-HR-004", moduleId: "MOD-HR-002", operation: "Compliance", name: "Tax Form Submission", description: "Collecting and filing mandatory tax and compliance docs.",
-    owner: "HR Manager", riskLevel: "Low", inputs: [], outputs: [], linkedSopIds: [], createdAt: "2026-03-01",
+    owner: "HR Manager", riskLevel: "Low", 
+    ...generateTaskIOs("Tax Form Submission"),
+    linkedSopIds: [], createdAt: "2026-03-01",
   },
   // Performance Flow
   {
     id: "TSK-HR-005", moduleId: "MOD-HR-003", operation: "Evaluation", name: "Self-Assessment", description: "Employees completing their periodic self-evaluations.",
-    owner: "HR Manager", riskLevel: "Low", inputs: [], outputs: [], linkedSopIds: [], createdAt: "2026-03-01",
+    owner: "HR Manager", riskLevel: "Low", 
+    ...generateTaskIOs("Self-Assessment"),
+    linkedSopIds: [], createdAt: "2026-03-01",
   },
   {
     id: "TSK-HR-006", moduleId: "MOD-HR-003", operation: "Coaching", name: "PIP Initiation", description: "Initiating Performance Improvement Plans for low performers.",
-    owner: "HR Manager", riskLevel: "High", inputs: [], outputs: [], linkedSopIds: [], createdAt: "2026-03-01",
+    owner: "HR Manager", riskLevel: "High", 
+    ...generateTaskIOs("PIP Initiation"),
+    linkedSopIds: [], createdAt: "2026-03-01",
   },
   // Payroll Flow
   {
     id: "TSK-HR-007", moduleId: "MOD-HR-004", operation: "Processing", name: "Timecard Approval", description: "Reviewing and approving employee timecards for payroll.",
-    owner: "HR Manager", riskLevel: "Medium", inputs: [], outputs: [], linkedSopIds: [], createdAt: "2026-03-01",
+    owner: "HR Manager", riskLevel: "Medium", 
+    ...generateTaskIOs("Timecard Approval"),
+    linkedSopIds: [], createdAt: "2026-03-01",
   },
 ];
 

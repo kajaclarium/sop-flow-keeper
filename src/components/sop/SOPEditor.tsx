@@ -32,6 +32,8 @@ const makeStep = (): SOPStep => ({
   requirePhoto: false,
   requireEvidenceFile: false,
   requireMeasurement: false,
+  inputs: [],
+  outputs: [],
 });
 
 interface SOPEditorProps {
