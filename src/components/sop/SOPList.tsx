@@ -100,7 +100,7 @@ export function SOPList() {
               placeholder="Search SOPs…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              prefix={<Search size={16} />}
+              suffix={<Search size={16} />}
             />
           </div>
           <div className="flex items-center gap-1.5">

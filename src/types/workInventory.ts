@@ -11,6 +11,7 @@ export interface TaskIO {
 
 export interface WorkModule {
     id: string;
+    departmentId: string;
     name: string;
     description: string;
     owner: string;
@@ -21,6 +22,7 @@ export interface WorkModule {
 export interface WorkTask {
     id: string;
     moduleId: string;
+    operation?: string;
     name: string;
     description: string;
     owner: string;

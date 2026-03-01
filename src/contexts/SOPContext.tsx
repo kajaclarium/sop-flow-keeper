@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 import { SOPRecord, SOPStep, SOPStatus, SOPFormat, SOPVersion, AppView, BusinessProcess } from "@/types/sop";
 
 const generateId = () => `SOP-${String(Math.floor(Math.random() * 900) + 100).padStart(3, "0")}`;
@@ -6,10 +6,10 @@ const generateBPId = () => `BP-${String(Math.floor(Math.random() * 900) + 100).p
 const generateStepId = () => crypto.randomUUID();
 
 const INITIAL_BUSINESS_PROCESSES: BusinessProcess[] = [
-  { id: "BP-001", name: "Facility Management", description: "Cleaning, maintenance and facility operations", createdAt: "2025-06-01" },
-  { id: "BP-002", name: "IT & Data Operations", description: "Data backup, recovery and IT infrastructure", createdAt: "2025-06-01" },
-  { id: "BP-003", name: "Safety & Compliance", description: "Incident response, chemical handling and regulatory compliance", createdAt: "2025-06-01" },
-  { id: "BP-004", name: "Human Resources", description: "Employee onboarding, training and HR procedures", createdAt: "2025-06-01" },
+  { id: "BP-001", departmentId: "DEP-0001", name: "Facility Management", description: "Cleaning, maintenance and facility operations", createdAt: "2025-06-01" },
+  { id: "BP-002", departmentId: "DEP-0002", name: "IT & Data Operations", description: "Data backup, recovery and IT infrastructure", createdAt: "2025-06-01" },
+  { id: "BP-003", departmentId: "DEP-0003", name: "Safety & Compliance", description: "Incident response, chemical handling and regulatory compliance", createdAt: "2025-06-01" },
+  { id: "BP-004", departmentId: "DEP-0004", name: "Human Resources", description: "Employee onboarding, training and HR procedures", createdAt: "2025-06-01" },
 ];
 
 const INITIAL_SOPS: SOPRecord[] = [
@@ -115,16 +115,22 @@ interface SOPContextType {
   createBusinessProcess: (name: string, description: string) => void;
   updateBusinessProcess: (id: string, updates: Partial<BusinessProcess>) => void;
   deleteBusinessProcess: (id: string) => void;
+  allBusinessProcesses: BusinessProcess[];
 }
 
 const SOPContext = createContext<SOPContextType | undefined>(undefined);
 
-export function SOPProvider({ children }: { children: React.ReactNode }) {
+export function SOPProvider({ children, departmentId }: { children: React.ReactNode; departmentId?: string }) {
   const [sops, setSops] = useState<SOPRecord[]>(INITIAL_SOPS);
-  const [businessProcesses, setBusinessProcesses] = useState<BusinessProcess[]>(INITIAL_BUSINESS_PROCESSES);
+  const [allBusinessProcesses, setAllBusinessProcesses] = useState<BusinessProcess[]>(INITIAL_BUSINESS_PROCESSES);
   const [currentView, setCurrentView] = useState<AppView>("processes");
   const [selectedSopId, setSelectedSopId] = useState<string | null>(null);
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
+
+  // Filtered business processes based on departmentId
+  const businessProcesses = useMemo(() => 
+    departmentId ? allBusinessProcesses.filter(bp => bp.departmentId === departmentId) : allBusinessProcesses,
+  [allBusinessProcesses, departmentId]);
 
   const selectSop = useCallback((id: string | null) => setSelectedSopId(id), []);
 
@@ -202,16 +208,23 @@ export function SOPProvider({ children }: { children: React.ReactNode }) {
 
   // Business Process CRUD
   const createBusinessProcess = useCallback((name: string, description: string) => {
-    const bp: BusinessProcess = { id: generateBPId(), name, description, createdAt: new Date().toISOString().split("T")[0] };
-    setBusinessProcesses((prev) => [...prev, bp]);
-  }, []);
+    if (!departmentId) return;
+    const bp: BusinessProcess = { 
+      id: generateBPId(), 
+      departmentId,
+      name, 
+      description, 
+      createdAt: new Date().toISOString().split("T")[0] 
+    };
+    setAllBusinessProcesses((prev) => [...prev, bp]);
+  }, [departmentId]);
 
   const updateBusinessProcess = useCallback((id: string, updates: Partial<BusinessProcess>) => {
-    setBusinessProcesses((prev) => prev.map((b) => (b.id === id ? { ...b, ...updates } : b)));
+    setAllBusinessProcesses((prev) => prev.map((b) => (b.id === id ? { ...b, ...updates } : b)));
   }, []);
 
   const deleteBusinessProcess = useCallback((id: string) => {
-    setBusinessProcesses((prev) => prev.filter((b) => b.id !== id));
+    setAllBusinessProcesses((prev) => prev.filter((b) => b.id !== id));
     // Unlink SOPs
     setSops((prev) => prev.map((s) => s.businessProcessId === id ? { ...s, businessProcessId: undefined } : s));
   }, []);
@@ -233,6 +246,7 @@ export function SOPProvider({ children }: { children: React.ReactNode }) {
       navigateToCreate, navigateToEdit, navigateToView, navigateToList,
       navigateToProcesses, navigateToProcessSops,
       createBusinessProcess, updateBusinessProcess, deleteBusinessProcess,
+      allBusinessProcesses,
     }}>
       {children}
     </SOPContext.Provider>

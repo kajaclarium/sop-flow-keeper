@@ -337,7 +337,7 @@ export function TaskDetail() {
 
           {showSopSearch && (
             <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
-              <EzInput placeholder="Search SOPs..." value={sopSearch} onChange={(e) => setSopSearch(e.target.value)} prefix={<Search className="h-3.5 w-3.5 text-muted-foreground" />} className="text-xs" />
+              <EzInput placeholder="Search SOPs..." value={sopSearch} onChange={(e) => setSopSearch(e.target.value)} suffix={<Search className="h-3.5 w-3.5 text-muted-foreground" />} className="text-xs" />
               <div className="space-y-1.5 max-h-48 overflow-y-auto">
                 {(sopSearch.trim() ? sopSuggestions : unlinkedSops).map((sop) => (
                   <div key={sop.id} className="flex items-center gap-3 rounded-lg border p-2.5 hover:bg-accent/50 cursor-pointer transition-colors" onClick={() => addSopLink(sop.id)}>

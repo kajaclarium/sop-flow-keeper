@@ -1,3 +1,4 @@
+import { useParams } from "react-router-dom";
 import { SOPProvider, useSOP } from "@/contexts/SOPContext";
 import { TopBar } from "@/components/sop/TopBar";
 import { SOPList } from "@/components/sop/SOPList";
@@ -21,8 +22,10 @@ function SOPApp() {
 }
 
 export default function Index() {
+  const { departmentId } = useParams<{ departmentId: string }>();
+
   return (
-    <SOPProvider>
+    <SOPProvider departmentId={departmentId}>
       <SOPApp />
     </SOPProvider>
   );

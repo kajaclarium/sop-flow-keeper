@@ -110,6 +110,7 @@ export function TaskList() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [operation, setOperation] = useState("");
   const [description, setDescription] = useState("");
   const [owner, setOwner] = useState("");
   const [riskLevel, setRiskLevel] = useState<RiskLevel>("Medium");
@@ -156,15 +157,16 @@ export function TaskList() {
   const handleSave = () => {
     if (!name.trim() || !owner.trim() || !selectedModuleId) return;
     if (editingId) {
-      updateTask(editingId, { name: name.trim(), description: description.trim(), owner: owner.trim(), riskLevel, inputs, outputs, linkedSopIds });
+      updateTask(editingId, { name: name.trim(), operation: operation.trim(), description: description.trim(), owner: owner.trim(), riskLevel, inputs, outputs, linkedSopIds });
     } else {
-      createTask(selectedModuleId, name.trim(), description.trim(), owner.trim(), riskLevel, inputs, outputs, linkedSopIds);
+      createTask(selectedModuleId, name.trim(), description.trim(), owner.trim(), riskLevel, inputs, outputs, linkedSopIds, operation.trim());
     }
     resetForm();
   };
 
   const resetForm = () => {
     setName("");
+    setOperation("");
     setDescription("");
     setOwner("");
     setRiskLevel("Medium");
@@ -181,6 +183,7 @@ export function TaskList() {
     if (!task) return;
     setEditingId(id);
     setName(task.name);
+    setOperation(task.operation || "");
     setDescription(task.description);
     setOwner(task.owner);
     setRiskLevel(task.riskLevel);
@@ -265,7 +268,7 @@ export function TaskList() {
               placeholder="Search tasks…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+              suffix={<Search className="h-4 w-4 text-muted-foreground" />}
             />
           </div>
           <div className="flex items-center gap-1.5">
@@ -296,10 +299,13 @@ export function TaskList() {
           <div className="space-y-4 py-2 max-h-[60vh] overflow-y-auto">
             <div className="grid grid-cols-2 gap-4">
               <EzInput label="Name" placeholder="e.g. Preventive Maintenance" value={name} onChange={(e) => setName(e.target.value)} required />
+              <EzInput label="Operation" placeholder="e.g. Screening" value={operation} onChange={(e) => setOperation(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <EzSelect label="Owner (Role)" placeholder="Select a role" options={roleOptions} value={owner || undefined} onValueChange={(v) => setOwner(v as string)} searchable clearable />
+              <EzSelect label="Risk Level" options={RISK_OPTIONS} value={riskLevel} onValueChange={(v) => setRiskLevel(v as RiskLevel)} />
             </div>
             <EzTextarea label="Description" placeholder="Task description…" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-            <EzSelect label="Risk Level" options={RISK_OPTIONS} value={riskLevel} onValueChange={(v) => setRiskLevel(v as RiskLevel)} />
 
             <IOEditor items={inputs} onChange={setInputs} direction="input" />
             <IOEditor items={outputs} onChange={setOutputs} direction="output" />
@@ -314,7 +320,7 @@ export function TaskList() {
                 placeholder="Search SOPs by ID or title…"
                 value={sopSearch}
                 onChange={(e) => setSopSearch(e.target.value)}
-                prefix={<Search className="h-3.5 w-3.5 text-muted-foreground" />}
+                suffix={<Search className="h-3.5 w-3.5 text-muted-foreground" />}
                 className="text-xs"
               />
               <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">

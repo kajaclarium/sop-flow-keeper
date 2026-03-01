@@ -41,6 +41,7 @@ export interface SOPRecord {
 
 export interface BusinessProcess {
   id: string;
+  departmentId: string;
   name: string;
   description: string;
   createdAt: string;
