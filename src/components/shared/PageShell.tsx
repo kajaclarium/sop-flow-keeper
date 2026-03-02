@@ -33,7 +33,7 @@ export function PageShell({
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar Slot */}
         {sidebar && (
-          <aside className="w-80 border-r border-slate-200 bg-white flex flex-col shrink-0 overflow-y-auto shadow-sm z-30">
+          <aside className="border-r border-slate-200 bg-white flex flex-col shrink-0 overflow-y-auto shadow-sm z-30">
             {sidebar}
           </aside>
         )}
