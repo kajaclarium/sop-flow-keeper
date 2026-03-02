@@ -13,15 +13,21 @@ interface DepartmentCardProps {
   onEdit: (id: string) => void;
   /** Callback fired when the delete action is clicked. */
   onDelete: (id: string) => void;
+  /** Optional custom click handler for the card. */
+  onClick?: () => void;
 }
 
 /** A single department node card used in the org tree, with hover actions and click-to-navigate. */
-export function DepartmentCard({ department, hasChildren, onEdit, onDelete }: DepartmentCardProps) {
+export function DepartmentCard({ department, hasChildren, onEdit, onDelete, onClick }: DepartmentCardProps) {
   const navigate = useNavigate();
 
   /** Navigate into the department's Process (Work Inventory) page on card click. */
   const handleClick = () => {
-    navigate(`/department/${department.id}/work-inventory`);
+    if (onClick) {
+      onClick();
+    } else {
+      navigate(`/department/${department.id}/work-inventory`);
+    }
   };
 
   return (

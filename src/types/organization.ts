@@ -49,8 +49,16 @@ export interface OrgRole {
     tierId: RoleTierId;
     /** Optional department ID this role is primarily associated with. */
     departmentId?: string;
+    /** Explicit parent role ID for hierarchical visual tree reporting. */
+    parentId: string | null;
     /** RACI designation defining how this role participates in processes. */
     raciType: RACIType;
+    /** Detailed RACI mapping for Responsible, Accountable, Consulted, Informed. */
+    raci?: Record<"R" | "A" | "C" | "I", string>;
+    /** Icon for visual display. */
+    icon?: string;
+    /** Number of SOPs owned. */
+    sops?: number;
     /** ISO date string of when the role was created. */
     createdAt: string;
 }

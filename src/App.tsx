@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { DWMLanding } from "@/components/organization/DWMLanding";
-import { OrgStructurePage } from "@/components/organization/OrgStructurePage";
+import OrgStructure from "./pages/Org_Structure";
 import Index from "./pages/Index";
 import WorkInventory from "./pages/WorkInventory";
 import NotFound from "./pages/NotFound";
@@ -19,7 +19,7 @@ export default function App() {
             <Route path="/" element={<DWMLanding />} />
 
             {/* Org Structure — 3-tier RACI role catalog */}
-            <Route path="/org-structure" element={<OrgStructurePage />} />
+            <Route path="/org-structure" element={<OrgStructure />} />
 
             {/* Department-scoped SOP Management */}
             <Route path="/department/:departmentId/sop" element={<Index />} />
