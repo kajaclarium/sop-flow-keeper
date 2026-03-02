@@ -168,13 +168,10 @@ export function ModuleList() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {modules.map((mod) => {
-              const taskCount = getTaskCount(mod.id);
-              const uncontrolled = getUncontrolledCount(mod.id);
-              return (
+            {modules.map((mod) => (
                 <div
                   key={mod.id}
-                  className="group relative rounded-xl border bg-card p-5 transition-all hover:shadow-md hover:border-primary/30 cursor-pointer"
+                  className="group relative rounded-xl border bg-card p-5 transition-all hover:shadow-md hover:border-primary/30 cursor-pointer flex flex-col justify-between"
                   onClick={() => navigateToTasks(mod.id)}
                 >
                   <div className="flex items-start justify-between">
@@ -191,32 +188,15 @@ export function ModuleList() {
                           side="bottom"
                           iconSize={12}
                         />
-                        {mod.description && (
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{mod.description}</p>
-                        )}
                       </div>
                     </div>
                   </div>
+                  
+                  {mod.description && (
+                    <p className="text-xs text-muted-foreground mt-3 line-clamp-3 leading-relaxed">{mod.description}</p>
+                  )}
 
-                  <div className="flex items-center gap-2 mt-3">
-                    <RiskBadge level={mod.riskLevel} />
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <User className="h-3 w-3" />
-                      <span className="truncate max-w-[120px]">{mod.owner}</span>
-                    </div>
-                  </div>
-
-
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <ListTodo className="h-3.5 w-3.5" />
-                        <span>{taskCount} Task{taskCount !== 1 ? "s" : ""}</span>
-                      </div>
-                      {uncontrolled > 0 && (
-                        <ControlStatusBadge status="Uncontrolled" />
-                      )}
-                    </div>
+                  <div className="flex justify-end mt-4 pt-3 border-t">
                     <div className="flex items-center gap-1">
                       <EzButton
                         variant="text"
@@ -239,8 +219,7 @@ export function ModuleList() {
                     </div>
                   </div>
                 </div>
-              );
-            })}
+              ))}
           </div>
         )}
 

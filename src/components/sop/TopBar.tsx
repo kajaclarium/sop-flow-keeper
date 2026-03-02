@@ -26,7 +26,6 @@ export function TopBar({ children }: TopBarProps) {
   const department = departmentId ? getDepartmentById(departmentId) : null;
   const process = getSelectedProcess();
   const sop = getSelectedSop();
-  const showProcessCrumb = currentView !== "processes";
 
   /** Build process name lookup for SOP results. */
   const processMap = useMemo(
@@ -38,6 +37,13 @@ export function TopBar({ children }: TopBarProps) {
   const moduleMap = useMemo(
     () => Object.fromEntries(modules.map((m) => [m.id, m.name])),
     [modules]
+  );
+
+  /** Operation name lookup for task results. */
+  const { operations } = useWorkInventory();
+  const operationMap = useMemo(
+    () => Object.fromEntries(operations.map((o) => [o.id, o.name])),
+    [operations]
   );
 
   /** Department-scoped SOPs for Global Search. */
@@ -65,7 +71,7 @@ export function TopBar({ children }: TopBarProps) {
         .map((t) => ({
           id: t.id,
           name: t.name,
-          operation: t.operation,
+          operation: t.operationId ? operationMap[t.operationId] : undefined,
           owner: t.owner,
           moduleId: t.moduleId,
           moduleName: moduleMap[t.moduleId],
@@ -122,27 +128,21 @@ export function TopBar({ children }: TopBarProps) {
         <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />
         <EzButton
           variant="text"
-          onClick={navigateToProcesses}
+          onClick={navigateToList}
           className={`text-xs font-medium p-0 ${
-            currentView === "processes" ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+            currentView === "processes" || currentView === "list" ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           SOP
         </EzButton>
 
-        {/* Process (Business Process) crumb */}
+        {/* Process (Business Process) crumb — only show if a specific process is selected */}
         {process && (
           <>
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />
-            <EzButton
-              variant="text"
-              onClick={() => navigateToList()}
-              className={`text-xs font-medium p-0 ${
-                currentView === "list" ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
+            <span className="text-xs font-semibold text-foreground truncate max-w-48">
               {process.name}
-            </EzButton>
+            </span>
           </>
         )}
 

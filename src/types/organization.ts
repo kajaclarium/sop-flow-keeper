@@ -47,6 +47,8 @@ export interface OrgRole {
     description: string;
     /** The tier this role belongs to. */
     tierId: RoleTierId;
+    /** Optional department ID this role is primarily associated with. */
+    departmentId?: string;
     /** RACI designation defining how this role participates in processes. */
     raciType: RACIType;
     /** ISO date string of when the role was created. */

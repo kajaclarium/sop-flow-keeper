@@ -8,7 +8,7 @@ interface ControlStatusBadgeProps {
 
 /** Renders an EzBadge indicating whether a task is controlled or uncontrolled. */
 export function ControlStatusBadge({ status }: ControlStatusBadgeProps) {
-  const isControlled = status === "Controlled";
+  const isControlled = status === "SOP Mapped";
   return (
     <EzBadge
       severity={isControlled ? "success" : "danger"}

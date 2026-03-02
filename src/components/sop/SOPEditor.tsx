@@ -5,7 +5,8 @@ import { StepCard } from "./StepCard";
 import { FileUploadZone } from "./FileUploadZone";
 import { StatusWorkflow } from "./StatusWorkflow";
 import { InfoTooltip } from "@/components/shared/InfoTooltip";
-import { EzButton, EzInput } from "@clarium/ezui-react-components";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { EzButton, EzInput, EzSelect } from "@clarium/ezui-react-components";
 import {
   ArrowLeft,
   Plus,
@@ -52,9 +53,21 @@ export function SOPEditor({ mode }: SOPEditorProps) {
     getSelectedSop,
   } = useSOP();
   const { toast } = useToast();
+  const { departments } = useOrganization();
 
   const existingSop = mode === "edit" ? getSelectedSop() : undefined;
   const isLocked = existingSop?.status === "Effective";
+  
+  const { allBusinessProcesses } = useSOP();
+  
+  const initialDeptId = existingSop?.businessProcessId 
+    ? allBusinessProcesses.find(bp => bp.id === existingSop.businessProcessId)?.departmentId || ""
+    : "";
+
+  const [departmentId, setDepartmentId] = useState<string>(initialDeptId);
+  const [processId, setProcessId] = useState<string>(existingSop?.businessProcessId || "");
+
+  const availableProcesses = allBusinessProcesses.filter(bp => bp.departmentId === departmentId);
 
   const [title, setTitle] = useState(existingSop?.title || "");
   const [owner, setOwner] = useState(existingSop?.owner || "");
@@ -152,13 +165,14 @@ export function SOPEditor({ mode }: SOPEditorProps) {
       return;
     }
     if (mode === "create") {
-      const id = createSop(title, format, owner || "Unassigned", localSteps);
+      const id = createSop(title, format, owner || "Unassigned", processId || undefined, localSteps);
       toast({ title: "SOP Created", description: `${id} saved as draft.` });
       navigateToList();
     } else if (existingSop) {
       updateSop(existingSop.id, {
         title,
         owner: owner || existingSop.owner,
+        businessProcessId: processId || undefined,
         steps: localSteps,
         fileName: fileName || undefined,
         aiAnalysis: aiAnalysis || undefined,
@@ -166,7 +180,7 @@ export function SOPEditor({ mode }: SOPEditorProps) {
       toast({ title: "SOP Updated" });
       navigateToView(existingSop.id);
     }
-  }, [title, format, owner, mode, existingSop, localSteps, fileName, aiAnalysis, createSop, updateSop, navigateToList, navigateToView, toast]);
+  }, [title, format, owner, mode, existingSop, localSteps, fileName, aiAnalysis, createSop, updateSop, navigateToList, navigateToView, toast, processId]);
 
   const handleTransition = useCallback(
     (newStatus: "In Review" | "Approved" | "Effective") => {
@@ -229,6 +243,27 @@ export function SOPEditor({ mode }: SOPEditorProps) {
               disabled
               className="bg-muted font-mono text-sm"
             />
+            
+            <EzSelect
+              label="Department (Parent)"
+              placeholder="Select Department..."
+              options={departments.map(d => ({ label: d.name, value: d.id }))}
+              value={departmentId}
+              onValueChange={v => {
+                setDepartmentId(v as string);
+                setProcessId(""); // Reset process when dept changes
+              }}
+              disabled={!canEdit}
+            />
+            <EzSelect
+              label="Inside Process (Child)"
+              placeholder="Select Process..."
+              options={availableProcesses.map(p => ({ label: p.name, value: p.id }))}
+              value={processId}
+              onValueChange={v => setProcessId(v as string)}
+              disabled={!canEdit || !departmentId}
+            />
+            
             <div className="col-span-2">
               <EzInput
                 label="Document Title"

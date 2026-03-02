@@ -1,7 +1,5 @@
-import { TaskIO, IOType } from "./common";
-
 export type RiskLevel = "Low" | "Medium" | "High" | "Critical";
-export type ControlStatus = "Controlled" | "Uncontrolled";
+export type ControlStatus = "SOP Mapped" | "SOP Unmapped";
 
 export interface WorkModule {
     id: string;
@@ -12,17 +10,22 @@ export interface WorkModule {
     riskLevel: RiskLevel;
     createdAt: string;
 }
+export interface WorkOperation {
+    id: string;
+    moduleId: string;
+    name: string;
+    description: string;
+    createdAt: string;
+}
 
 export interface WorkTask {
     id: string;
     moduleId: string;
-    operation?: string;
+    operationId?: string;
     name: string;
     description: string;
     owner: string;
     riskLevel: RiskLevel;
-    inputs: TaskIO[];
-    outputs: TaskIO[];
     linkedSopIds: string[];
     createdAt: string;
 }

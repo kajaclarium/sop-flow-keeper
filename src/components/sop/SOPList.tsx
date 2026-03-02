@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSOP } from "@/contexts/SOPContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { useWorkInventory } from "@/contexts/WorkInventoryContext";
 import { SOPStatus } from "@/types/sop";
 import { SOPStatusBadge } from "./SOPStatusBadge";
@@ -8,15 +9,17 @@ import { InfoTooltip } from "@/components/shared/InfoTooltip";
 import { EzButton, EzInput, EzMenu, EzAlertDialog } from "@clarium/ezui-react-components";
 import {
   Plus, Search, Eye, Pencil, Trash2, FileText, Blocks, Lock, Clock, User, ChevronDown,
-  Boxes, ExternalLink,
+  Boxes, ExternalLink, Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EzSelect } from "@clarium/ezui-react-components";
 
 const STATUS_FILTERS: (SOPStatus | "All")[] = ["All", "Draft", "In Review", "Approved", "Effective"];
 
 /** Lists all SOPs for the selected business process with search, status filtering, and CRUD actions. */
 export function SOPList() {
-  const { sops, navigateToCreate, navigateToView, navigateToEdit, deleteSop, selectedProcessId, getSelectedProcess } = useSOP();
+  const { sops, navigateToCreate, navigateToView, navigateToEdit, deleteSop, selectedProcessId, getSelectedProcess, allBusinessProcesses } = useSOP();
+  const { departments } = useOrganization();
   const { allTasks, navigateToTasks, navigateToTaskDetail } = useWorkInventory();
   const navigate = useNavigate();
   const { departmentId } = useParams<{ departmentId: string }>();
@@ -36,6 +39,7 @@ export function SOPList() {
         s.id.toLowerCase().includes(search.toLowerCase()) ||
         s.owner.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === "All" || s.status === statusFilter;
+      
       return matchesSearch && matchesStatus;
     });
   }, [processSops, search, statusFilter]);
@@ -47,7 +51,10 @@ export function SOPList() {
     effective: processSops.filter((s) => s.status === "Effective").length,
   }), [processSops]);
 
-  const processName = getSelectedProcess()?.name;
+  const selectedProcess = getSelectedProcess();
+  const processName = selectedProcess?.name;
+  const currentDepartment = departmentId ? departments.find(d => d.id === departmentId) : null;
+  const displayTitle = processName || (currentDepartment ? `${currentDepartment.name} SOPs` : "All SOPs");
 
   /** Opens the delete confirmation dialog for a specific SOP. */
   const openDeleteDialog = (sopId: string) => {
@@ -86,18 +93,16 @@ export function SOPList() {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
-        {/* Process Title */}
-        {processName && (
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">{processName}</h2>
-            <InfoTooltip
-              title={processName}
-              description="This business process groups related SOPs that govern how work is performed within this department or function. Each SOP follows a lifecycle: Draft → In Review → Approved → Effective."
-              tip="SOPs in 'Effective' status are locked and cannot be edited. Create a new version to make changes to an effective SOP."
-              side="bottom"
-            />
-          </div>
-        )}
+        {/* Context Title */}
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold">{displayTitle}</h2>
+          <InfoTooltip
+            title={displayTitle}
+            description="This view shows Standard Operating Procedures (SOPs) governing work. Each SOP follows a lifecycle: Draft → In Review → Approved → Effective."
+            tip="SOPs in 'Effective' status are locked and cannot be edited. Create a new version to make changes to an effective SOP."
+            side="bottom"
+          />
+        </div>
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4">
           {[
@@ -117,29 +122,31 @@ export function SOPList() {
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center gap-6">
-          <div className="flex-1 max-w-sm">
-            <EzInput
-              placeholder="Search SOPs…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              suffix={<Search size={16} />}
-            />
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="max-w-sm flex-1">
+              <EzInput
+                placeholder="Search SOPs…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                suffix={<Search size={16} />}
+              />
+            </div>
+            <div className="flex items-center gap-1.5 ml-2">
+              {STATUS_FILTERS.map((s) => (
+                <EzButton
+                  key={s}
+                  variant={statusFilter === s ? "classic" : "text"}
+                  severity={statusFilter === s ? "primary" : undefined}
+                  size="small"
+                  onClick={() => setStatusFilter(s)}
+                >
+                  {s}
+                </EzButton>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            {STATUS_FILTERS.map((s) => (
-              <EzButton
-                key={s}
-                variant={statusFilter === s ? "classic" : "text"}
-                severity={statusFilter === s ? "primary" : undefined}
-                size="small"
-                onClick={() => setStatusFilter(s)}
-              >
-                {s}
-              </EzButton>
-            ))}
-          </div>
-          <EzButton onClick={navigateToCreate} className="ml-auto" icon={<Plus className="h-4 w-4" />}>
+          <EzButton onClick={navigateToCreate} icon={<Plus className="h-4 w-4" />}>
             Create SOP
           </EzButton>
         </div>
@@ -157,6 +164,10 @@ export function SOPList() {
               /* Check if this SOP has a newer effective version (i.e., it's superseded) */
               const isSuperseded = !isEffective && sop.versions.length > 1 && sop.versions.some(v => v.status === "Effective" && v.version !== sop.currentVersion);
               const linkedTasks = getLinkedTasks(sop.id);
+              
+              const bp = allBusinessProcesses.find(p => p.id === sop.businessProcessId);
+              const deptName = bp?.departmentId ? departments.find(d => d.id === bp.departmentId)?.name : "Unknown Department";
+              
               return (
                 <div key={sop.id} className="rounded-xl border bg-card overflow-hidden transition-all hover:shadow-sm group">
                   {/* Main SOP row */}
@@ -257,6 +268,11 @@ export function SOPList() {
                         )}
                       </>
                     )}
+                    
+                    <div className="ml-auto flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground shrink-0 bg-background/50 px-2.5 py-1 rounded border">
+                      <Building2 className="h-3 w-3" />
+                      <span>{deptName}</span>
+                    </div>
                   </div>
                 </div>
               );

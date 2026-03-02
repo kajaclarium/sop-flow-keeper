@@ -14,8 +14,8 @@ import { cn } from "@/lib/utils";
  */
 export function WorkInventorySidebar() {
   const { 
-    modules, tasks, selectedModuleId, selectedTaskId,
-    navigateToModules, navigateToTasks, navigateToTaskDetail 
+    modules, tasks, operations, selectedModuleId, selectedTaskId, selectedOperationId,
+    navigateToModules, navigateToTasks, navigateToOperation, navigateToTaskDetail 
   } = useWorkInventory();
   
   const [search, setSearch] = useState("");
@@ -40,23 +40,28 @@ export function WorkInventorySidebar() {
   const groupedData = useMemo(() => {
     return modules.map(mod => {
       const modTasks = tasks.filter(t => t.moduleId === mod.id);
+      const modOperations = operations.filter(o => o.moduleId === mod.id);
       
-      // Group by operation
-      const operations: Record<string, WorkTask[]> = {};
+      // Group tasks by operationId
+      const tasksByOp: Record<string, WorkTask[]> = {};
       modTasks.forEach(task => {
-        const op = task.operation || "Standard Operations";
-        if (!operations[op]) operations[op] = [];
-        operations[op].push(task);
+        const opId = task.operationId || "unassigned";
+        if (!tasksByOp[opId]) tasksByOp[opId] = [];
+        tasksByOp[opId].push(task);
       });
 
       return {
         ...mod,
-        operations,
+        operations: modOperations.map(op => ({
+          ...op,
+          tasks: tasksByOp[op.id] || []
+        })),
+        unassignedTasks: tasksByOp["unassigned"] || [],
         isVisible: mod.name.toLowerCase().includes(search.toLowerCase()) || 
                    modTasks.some(t => t.name.toLowerCase().includes(search.toLowerCase()))
       };
     }).filter(m => m.isVisible);
-  }, [modules, tasks, search]);
+  }, [modules, tasks, operations, search]);
 
   return (
     <aside className="w-64 border-r bg-card flex flex-col shrink-0 overflow-hidden">
@@ -95,7 +100,7 @@ export function WorkInventorySidebar() {
         </div>
 
         {groupedData.map(mod => {
-          const isExpanded = expandedModules.includes(mod.id) || search.length > 0;
+          const isExpanded = expandedModules.includes(mod.id) || search.length > 0 || selectedModuleId === mod.id;
           const isActive = selectedModuleId === mod.id && !selectedTaskId;
 
           return (
@@ -124,28 +129,39 @@ export function WorkInventorySidebar() {
               {/* Operations/Tasks Level */}
               {isExpanded && (
                 <div className="ml-4 pl-2 border-l border-border/50 space-y-0.5 mt-0.5">
-                  {Object.entries(mod.operations).map(([opName, opTasks]) => {
-                    const opKey = `${mod.id}-${opName}`;
-                    const isOpExpanded = expandedOperations.includes(opKey) || search.length > 0;
+                  {mod.operations.map((op) => {
+                    const opKey = op.id;
+                    const isOpExpanded = expandedOperations.includes(opKey) || 
+                                         search.length > 0 || 
+                                         op.tasks.some(t => t.id === selectedTaskId) ||
+                                         selectedOperationId === op.id;
                     
                     return (
                       <div key={opKey} className="space-y-0.5">
-                        <div className="flex items-center gap-1 text-muted-foreground hover:text-foreground group rounded-md px-1 py-1">
+                        <div 
+                          className={cn(
+                            "flex items-center gap-1 group rounded-md px-1 py-1 transition-colors",
+                            selectedOperationId === op.id ? "bg-accent/40 text-foreground" : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
                           <button 
                             onClick={() => toggleOperation(opKey)}
                             className="p-0.5 hover:bg-accent rounded"
                           >
                             {isOpExpanded ? <ChevronDown className="h-2.5 w-2.5" /> : <ChevronRight className="h-2.5 w-2.5" />}
                           </button>
-                          <span className="text-[11px] font-semibold text-muted-foreground/80 truncate">
-                            {opName}
-                          </span>
+                          <button
+                            onClick={() => navigateToOperation(mod.id, op.id)}
+                            className="flex-1 text-[11px] font-semibold text-left truncate"
+                          >
+                             {op.name}
+                          </button>
                         </div>
 
                         {/* Tasks Level */}
                         {isOpExpanded && (
                           <div className="ml-3 space-y-0.5">
-                            {opTasks.map(task => (
+                            {op.tasks.map(task => (
                               <button
                                 key={task.id}
                                 onClick={() => navigateToTaskDetail(task.id)}
@@ -165,6 +181,42 @@ export function WorkInventorySidebar() {
                       </div>
                     );
                   })}
+
+                  {/* Unassigned Tasks */}
+                  {mod.unassignedTasks.length > 0 && (
+                     <div className="space-y-0.5">
+                        <div className="flex items-center gap-1 text-muted-foreground hover:text-foreground group rounded-md px-1 py-1">
+                          <button 
+                            onClick={() => toggleOperation("unassigned-" + mod.id)}
+                            className="p-0.5 hover:bg-accent rounded"
+                          >
+                            {expandedOperations.includes("unassigned-" + mod.id) ? <ChevronDown className="h-2.5 w-2.5" /> : <ChevronRight className="h-2.5 w-2.5" />}
+                          </button>
+                          <span className="text-[11px] font-semibold text-orange-500/80 truncate">
+                            Unassigned
+                          </span>
+                        </div>
+                        {expandedOperations.includes("unassigned-" + mod.id) && (
+                          <div className="ml-3 space-y-0.5">
+                            {mod.unassignedTasks.map(task => (
+                              <button
+                                key={task.id}
+                                onClick={() => navigateToTaskDetail(task.id)}
+                                className={cn(
+                                  "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] transition-colors",
+                                  selectedTaskId === task.id 
+                                    ? "bg-primary text-primary-foreground shadow-sm" 
+                                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                                )}
+                              >
+                                <ListTodo className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{task.name}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                     </div>
+                  )}
                 </div>
               )}
             </div>

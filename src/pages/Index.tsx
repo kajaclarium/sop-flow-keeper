@@ -13,7 +13,6 @@ function SOPApp() {
   return (
     <div className="flex flex-col min-h-screen w-full">
       <TopBar />
-      {currentView === "processes" && <BusinessProcessList />}
       {currentView === "list" && <SOPList />}
       {currentView === "create" && <SOPEditor mode="create" />}
       {currentView === "edit" && <SOPEditor mode="edit" />}

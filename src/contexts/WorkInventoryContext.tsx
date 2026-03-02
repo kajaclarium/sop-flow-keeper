@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
-import { WorkModule, WorkTask, RiskLevel, WorkInventoryView, ControlStatus } from "@/types/workInventory";
-import { TaskIO, IOType } from "@/types/common";
-import { generateTaskIOs } from "@/utils/taskIoGenerator";
+import { WorkModule, WorkTask, WorkOperation, RiskLevel, WorkInventoryView, ControlStatus } from "@/types/workInventory";
 
 const generateModuleId = () => `MOD-${String(Math.floor(Math.random() * 900) + 100).padStart(3, "0")}`;
+const generateOperationId = () => `OP-${String(Math.floor(Math.random() * 900) + 100).padStart(3, "0")}`;
 const generateTaskId = () => `TSK-${String(Math.floor(Math.random() * 900) + 100).padStart(3, "0")}`;
 
 /** Available SOPs for linking — acts as the single source of truth for SOP metadata. */
@@ -34,89 +33,72 @@ const INITIAL_MODULES: WorkModule[] = [
   { id: "MOD-HR-004", departmentId: "DEP-0004", name: "Payroll & Administration", description: "Managing daily operational tasks, leave requests, and payroll processing.", owner: "HR Manager", riskLevel: "High", createdAt: "2026-03-01" },
 ];
 
+const INITIAL_OPERATIONS: WorkOperation[] = [
+  { id: "OP-001", moduleId: "MOD-001", name: "Preventive Maintenance", description: "Routine scheduled maintenance operations", createdAt: "2025-06-05" },
+  { id: "OP-002", moduleId: "MOD-001", name: "Corrective Maintenance", description: "Unplanned breakdown repairs", createdAt: "2025-06-05" },
+  { id: "OP-003", moduleId: "MOD-001", name: "Facility Management", description: "Cleaning and hygiene of facilities", createdAt: "2025-06-05" },
+  { id: "OP-HR-001", moduleId: "MOD-HR-001", name: "Screening", description: "Candidate resume review and screening", createdAt: "2026-03-01" },
+  { id: "OP-HR-002", moduleId: "MOD-HR-001", name: "Selection", description: "Interview processes", createdAt: "2026-03-01" },
+  { id: "OP-HR-003", moduleId: "MOD-HR-002", name: "Setup", description: "Initial setup for hires", createdAt: "2026-03-01" },
+  { id: "OP-HR-004", moduleId: "MOD-HR-002", name: "Compliance", description: "Mandatory compliance forms", createdAt: "2026-03-01" },
+  { id: "OP-HR-005", moduleId: "MOD-HR-003", name: "Evaluation", description: "Performance evaluations", createdAt: "2026-03-01" },
+  { id: "OP-HR-006", moduleId: "MOD-HR-003", name: "Coaching", description: "Performance improvement", createdAt: "2026-03-01" },
+  { id: "OP-HR-007", moduleId: "MOD-HR-004", name: "Processing", description: "Payroll and timecards", createdAt: "2026-03-01" },
+];
+
 const INITIAL_TASKS: WorkTask[] = [
   {
-    id: "TSK-001", moduleId: "MOD-001", operation: "Preventive Maintenance", name: "Preventive Maintenance Schedule", description: "Routine scheduled maintenance for all production equipment",
+    id: "TSK-001", moduleId: "MOD-001", operationId: "OP-001", name: "Preventive Maintenance Schedule", description: "Routine scheduled maintenance for all production equipment",
     owner: "Maintenance Technician", riskLevel: "High",
-    inputs: [
-      { id: "io-1", label: "Equipment Registry", type: "data", description: "List of all equipment with maintenance intervals" },
-      { id: "io-2", label: "Spare Parts Inventory", type: "material", description: "Available spare parts and consumables" },
-    ],
-    outputs: [
-      { id: "io-3", label: "Maintenance Log", type: "document", description: "Completed maintenance record with findings" },
-      { id: "io-4", label: "Equipment Status Report", type: "data", description: "Updated equipment health status" },
-    ],
     linkedSopIds: ["SOP-002"], createdAt: "2025-06-10",
   },
   {
-    id: "TSK-002", moduleId: "MOD-001", operation: "Corrective Maintenance", name: "Corrective Maintenance Response", description: "Unplanned breakdown repair and root cause analysis",
+    id: "TSK-002", moduleId: "MOD-001", operationId: "OP-002", name: "Corrective Maintenance Response", description: "Unplanned breakdown repair and root cause analysis",
     owner: "Senior Technician", riskLevel: "Critical",
-    inputs: [
-      { id: "io-5", label: "Breakdown Notification", type: "data", description: "Alert from monitoring system or operator report" },
-      { id: "io-6", label: "Equipment Manual", type: "document", description: "OEM technical documentation" },
-    ],
-    outputs: [
-      { id: "io-7", label: "Repair Report", type: "document", description: "Details of repair actions and parts replaced" },
-      { id: "io-8", label: "Root Cause Analysis", type: "document", description: "Investigation findings and preventive recommendations" },
-    ],
     linkedSopIds: [], createdAt: "2025-06-12",
   },
   {
-    id: "TSK-003", moduleId: "MOD-001", operation: "Facility Management", name: "Facility Cleaning & Hygiene", description: "Scheduled cleaning of production and office areas",
+    id: "TSK-003", moduleId: "MOD-001", operationId: "OP-003", name: "Facility Cleaning & Hygiene", description: "Scheduled cleaning of production and office areas",
     owner: "Facility Supervisor", riskLevel: "Medium",
-    inputs: [
-      { id: "io-9", label: "Cleaning Schedule", type: "data", description: "Weekly/monthly cleaning rotation plan" },
-      { id: "io-10", label: "Cleaning Supplies", type: "material", description: "Approved cleaning agents and tools" },
-    ],
-    outputs: [
-      { id: "io-11", label: "Cleaning Checklist", type: "document", description: "Signed checklist confirming completion" },
-    ],
     linkedSopIds: ["SOP-001"], createdAt: "2025-06-15",
   },
   // Recruitment Flow
   {
-    id: "TSK-HR-001", moduleId: "MOD-HR-001", operation: "Screening", name: "Resume Review", description: "Reviewing candidate resumes against job requisitions.",
+    id: "TSK-HR-001", moduleId: "MOD-HR-001", operationId: "OP-HR-001", name: "Resume Review", description: "Reviewing candidate resumes against job requisitions.",
     owner: "HR Manager", riskLevel: "Low", 
-    ...generateTaskIOs("Resume Review"),
     linkedSopIds: [], createdAt: "2026-03-01",
   },
   {
-    id: "TSK-HR-002", moduleId: "MOD-HR-001", operation: "Selection", name: "Interview Panel", description: "Conducting panel interviews with qualified candidates.",
+    id: "TSK-HR-002", moduleId: "MOD-HR-001", operationId: "OP-HR-002", name: "Interview Panel", description: "Conducting panel interviews with qualified candidates.",
     owner: "HR Manager", riskLevel: "Medium", 
-    ...generateTaskIOs("Interview Panel"),
     linkedSopIds: [], createdAt: "2026-03-01",
   },
   // Onboarding Flow
   {
-    id: "TSK-HR-003", moduleId: "MOD-HR-002", operation: "Setup", name: "IT Equipment Provision", description: "Provisioning hardware and system access for new hires.",
+    id: "TSK-HR-003", moduleId: "MOD-HR-002", operationId: "OP-HR-003", name: "IT Equipment Provision", description: "Provisioning hardware and system access for new hires.",
     owner: "IT Manager", riskLevel: "Medium", 
-    ...generateTaskIOs("IT Equipment Provision"),
     linkedSopIds: [], createdAt: "2026-03-01",
   },
   {
-    id: "TSK-HR-004", moduleId: "MOD-HR-002", operation: "Compliance", name: "Tax Form Submission", description: "Collecting and filing mandatory tax and compliance docs.",
+    id: "TSK-HR-004", moduleId: "MOD-HR-002", operationId: "OP-HR-004", name: "Tax Form Submission", description: "Collecting and filing mandatory tax and compliance docs.",
     owner: "HR Manager", riskLevel: "Low", 
-    ...generateTaskIOs("Tax Form Submission"),
     linkedSopIds: [], createdAt: "2026-03-01",
   },
   // Performance Flow
   {
-    id: "TSK-HR-005", moduleId: "MOD-HR-003", operation: "Evaluation", name: "Self-Assessment", description: "Employees completing their periodic self-evaluations.",
+    id: "TSK-HR-005", moduleId: "MOD-HR-003", operationId: "OP-HR-005", name: "Self-Assessment", description: "Employees completing their periodic self-evaluations.",
     owner: "HR Manager", riskLevel: "Low", 
-    ...generateTaskIOs("Self-Assessment"),
     linkedSopIds: [], createdAt: "2026-03-01",
   },
   {
-    id: "TSK-HR-006", moduleId: "MOD-HR-003", operation: "Coaching", name: "PIP Initiation", description: "Initiating Performance Improvement Plans for low performers.",
+    id: "TSK-HR-006", moduleId: "MOD-HR-003", operationId: "OP-HR-006", name: "PIP Initiation", description: "Initiating Performance Improvement Plans for low performers.",
     owner: "HR Manager", riskLevel: "High", 
-    ...generateTaskIOs("PIP Initiation"),
     linkedSopIds: [], createdAt: "2026-03-01",
   },
   // Payroll Flow
   {
-    id: "TSK-HR-007", moduleId: "MOD-HR-004", operation: "Processing", name: "Timecard Approval", description: "Reviewing and approving employee timecards for payroll.",
+    id: "TSK-HR-007", moduleId: "MOD-HR-004", operationId: "OP-HR-007", name: "Timecard Approval", description: "Reviewing and approving employee timecards for payroll.",
     owner: "HR Manager", riskLevel: "Medium", 
-    ...generateTaskIOs("Timecard Approval"),
     linkedSopIds: [], createdAt: "2026-03-01",
   },
 ];
@@ -125,18 +107,27 @@ const INITIAL_TASKS: WorkTask[] = [
 interface WorkInventoryContextType {
   modules: WorkModule[];
   tasks: WorkTask[];
+  operations: WorkOperation[];
   currentView: WorkInventoryView;
   selectedModuleId: string | null;
   selectedTaskId: string | null;
+  selectedOperationId: string | null;
+  setSelectedModuleId: (id: string | null) => void;
+  setSelectedTaskId: (id: string | null) => void;
+  setSelectedOperationId: (id: string | null) => void;
   setCurrentView: (view: WorkInventoryView) => void;
   createModule: (name: string, description: string, owner: string, riskLevel: RiskLevel) => void;
   updateModule: (id: string, updates: Partial<WorkModule>) => void;
   deleteModule: (id: string) => void;
-  createTask: (moduleId: string, name: string, description: string, owner: string, riskLevel: RiskLevel, inputs: TaskIO[], outputs: TaskIO[], linkedSopIds: string[], operation?: string) => void;
+  createOperation: (moduleId: string, name: string, description: string) => string;
+  updateOperation: (id: string, updates: Partial<WorkOperation>) => void;
+  deleteOperation: (id: string) => void;
+  createTask: (moduleId: string, name: string, description: string, owner: string, riskLevel: RiskLevel, linkedSopIds: string[], operationId?: string) => void;
   updateTask: (id: string, updates: Partial<WorkTask>) => void;
   deleteTask: (id: string) => void;
   navigateToModules: () => void;
   navigateToTasks: (moduleId: string) => void;
+  navigateToOperation: (moduleId: string, operationId: string) => void;
   navigateToTaskDetail: (taskId: string) => void;
   getSelectedModule: () => WorkModule | undefined;
   getSelectedTask: () => WorkTask | undefined;
@@ -144,6 +135,7 @@ interface WorkInventoryContextType {
   getModuleTasks: (moduleId: string) => WorkTask[];
   allModules: WorkModule[]; // Added for global registry access if needed
   allTasks: WorkTask[];    // Added for global registry access if needed
+  allOperations: WorkOperation[];
 }
 
 const WorkInventoryContext = createContext<WorkInventoryContextType | undefined>(undefined);
@@ -151,9 +143,11 @@ const WorkInventoryContext = createContext<WorkInventoryContextType | undefined>
 export function WorkInventoryProvider({ children, departmentId }: { children: React.ReactNode; departmentId?: string }) {
   const [allModules, setAllModules] = useState<WorkModule[]>(INITIAL_MODULES);
   const [allTasks, setAllTasks] = useState<WorkTask[]>(INITIAL_TASKS);
+  const [allOperations, setAllOperations] = useState<WorkOperation[]>(INITIAL_OPERATIONS);
   const [currentView, setCurrentView] = useState<WorkInventoryView>("modules");
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedOperationId, setSelectedOperationId] = useState<string | null>(null);
 
   // Filtered data based on departmentId
   const modules = useMemo(() => 
@@ -164,6 +158,11 @@ export function WorkInventoryProvider({ children, departmentId }: { children: Re
     const moduleIds = new Set(modules.map(m => m.id));
     return allTasks.filter(t => moduleIds.has(t.moduleId));
   }, [allTasks, modules]);
+
+  const operations = useMemo(() => {
+    const moduleIds = new Set(modules.map(m => m.id));
+    return allOperations.filter(o => moduleIds.has(o.moduleId));
+  }, [allOperations, modules]);
 
   const createModule = useCallback((name: string, description: string, owner: string, riskLevel: RiskLevel) => {
     if (!departmentId) return;
@@ -181,14 +180,35 @@ export function WorkInventoryProvider({ children, departmentId }: { children: Re
   const deleteModule = useCallback((id: string) => {
     setAllModules((prev) => prev.filter((m) => m.id !== id));
     setAllTasks((prev) => prev.filter((t) => t.moduleId !== id));
+    setAllOperations((prev) => prev.filter((o) => o.moduleId !== id));
     if (selectedModuleId === id) { setSelectedModuleId(null); setCurrentView("modules"); }
   }, [selectedModuleId]);
 
+  const createOperation = useCallback((moduleId: string, name: string, description: string) => {
+    const op: WorkOperation = {
+      id: generateOperationId(), moduleId, name, description,
+      createdAt: new Date().toISOString().split("T")[0],
+    };
+    setAllOperations((prev) => [...prev, op]);
+    return op.id; // Return ID for immediate usage
+  }, []);
+
+  const updateOperation = useCallback((id: string, updates: Partial<WorkOperation>) => {
+    setAllOperations((prev) => prev.map((o) => (o.id === id ? { ...o, ...updates } : o)));
+  }, []);
+
+  const deleteOperation = useCallback((id: string) => {
+    setAllOperations((prev) => prev.filter((o) => o.id !== id));
+    // When deleting an operation, unset operationId from its tasks or delete tasks? 
+    // Unset seems safer, deleting could lose data. Let's unset.
+    setAllTasks((prev) => prev.map((t) => t.operationId === id ? { ...t, operationId: undefined } : t));
+  }, []);
+
   const createTask = useCallback(
-    (moduleId: string, name: string, description: string, owner: string, riskLevel: RiskLevel, inputs: TaskIO[], outputs: TaskIO[], linkedSopIds: string[], operation?: string) => {
+    (moduleId: string, name: string, description: string, owner: string, riskLevel: RiskLevel, linkedSopIds: string[], operationId?: string) => {
       const task: WorkTask = {
         id: generateTaskId(), moduleId, name, description, owner, riskLevel,
-        inputs, outputs, linkedSopIds, operation,
+        linkedSopIds, operationId,
         createdAt: new Date().toISOString().split("T")[0],
       };
       setAllTasks((prev) => [task, ...prev]);
@@ -204,31 +224,43 @@ export function WorkInventoryProvider({ children, departmentId }: { children: Re
   }, [selectedTaskId]);
 
   const navigateToModules = useCallback(() => {
-    setSelectedModuleId(null); setSelectedTaskId(null); setCurrentView("modules");
+    setSelectedModuleId(null); setSelectedTaskId(null); setSelectedOperationId(null); setCurrentView("modules");
   }, []);
 
   const navigateToTasks = useCallback((moduleId: string) => {
-    setSelectedModuleId(moduleId); setSelectedTaskId(null); setCurrentView("tasks");
+    setSelectedModuleId(moduleId); setSelectedTaskId(null); setSelectedOperationId(null); setCurrentView("tasks");
+  }, []);
+
+  const navigateToOperation = useCallback((moduleId: string, operationId: string) => {
+    setSelectedModuleId(moduleId); setSelectedOperationId(operationId); setSelectedTaskId(null); setCurrentView("tasks");
   }, []);
 
   const navigateToTaskDetail = useCallback((taskId: string) => {
-    setSelectedTaskId(taskId); setCurrentView("taskDetail");
-  }, []);
+    const task = allTasks.find(t => t.id === taskId);
+    if (task) {
+      setSelectedModuleId(task.moduleId);
+      setSelectedOperationId(task.operationId || null);
+      setSelectedTaskId(taskId);
+      setCurrentView("taskDetail");
+    }
+  }, [allTasks]);
 
   const getSelectedModule = useCallback(() => modules.find((m) => m.id === selectedModuleId), [modules, selectedModuleId]);
   const getSelectedTask = useCallback(() => tasks.find((t) => t.id === selectedTaskId), [tasks, selectedTaskId]);
-  const getTaskControlStatus = useCallback((task: WorkTask): ControlStatus => task.linkedSopIds.length > 0 ? "Controlled" : "Uncontrolled", []);
+  const getTaskControlStatus = useCallback((task: WorkTask): ControlStatus => task.linkedSopIds.length > 0 ? "SOP Mapped" : "SOP Unmapped", []);
   const getModuleTasks = useCallback((moduleId: string) => tasks.filter((t) => t.moduleId === moduleId), [tasks]);
 
 
   return (
     <WorkInventoryContext.Provider value={{
-      modules, tasks, currentView, selectedModuleId, selectedTaskId, setCurrentView,
+      modules, tasks, operations, currentView, selectedModuleId, selectedTaskId, selectedOperationId,
+      setSelectedModuleId, setSelectedTaskId, setSelectedOperationId, setCurrentView,
       createModule, updateModule, deleteModule,
       createTask, updateTask, deleteTask,
-      navigateToModules, navigateToTasks, navigateToTaskDetail,
+      createOperation, updateOperation, deleteOperation,
+      navigateToModules, navigateToTasks, navigateToOperation, navigateToTaskDetail,
       getSelectedModule, getSelectedTask, getTaskControlStatus, getModuleTasks,
-      allModules, allTasks,
+      allModules, allTasks, allOperations
     }}>
       {children}
     </WorkInventoryContext.Provider>

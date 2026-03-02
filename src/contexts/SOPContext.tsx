@@ -97,7 +97,7 @@ interface SOPContextType {
   selectedProcessId: string | null;
   setCurrentView: (view: AppView) => void;
   selectSop: (id: string | null) => void;
-  createSop: (title: string, format: SOPFormat, owner: string, steps?: SOPStep[]) => string;
+  createSop: (title: string, format: SOPFormat, owner: string, businessProcessId?: string, steps?: SOPStep[]) => string;
   updateSop: (id: string, updates: Partial<SOPRecord>) => void;
   deleteSop: (id: string) => void;
   transitionStatus: (id: string, newStatus: SOPStatus) => void;
@@ -125,7 +125,7 @@ const SOPContext = createContext<SOPContextType | undefined>(undefined);
 export function SOPProvider({ children, departmentId }: { children: React.ReactNode; departmentId?: string }) {
   const [sops, setSops] = useState<SOPRecord[]>(INITIAL_SOPS);
   const [allBusinessProcesses, setAllBusinessProcesses] = useState<BusinessProcess[]>(INITIAL_BUSINESS_PROCESSES);
-  const [currentView, setCurrentView] = useState<AppView>("processes");
+  const [currentView, setCurrentView] = useState<AppView>("list");
   const [selectedSopId, setSelectedSopId] = useState<string | null>(null);
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
 
@@ -134,12 +134,20 @@ export function SOPProvider({ children, departmentId }: { children: React.ReactN
     departmentId ? allBusinessProcesses.filter(bp => bp.departmentId === departmentId) : allBusinessProcesses,
   [allBusinessProcesses, departmentId]);
 
+  const processIdsInDept = useMemo(() => new Set(businessProcesses.map(bp => bp.id)), [businessProcesses]);
+
+  // Filtered SOPs based on departmentId
+  const departmentSops = useMemo(() => {
+    if (!departmentId) return sops;
+    return sops.filter(s => s.businessProcessId && processIdsInDept.has(s.businessProcessId));
+  }, [sops, departmentId, processIdsInDept]);
+
   const selectSop = useCallback((id: string | null) => setSelectedSopId(id), []);
 
   const getSelectedSop = useCallback(() => sops.find((s) => s.id === selectedSopId), [sops, selectedSopId]);
   const getSelectedProcess = useCallback(() => businessProcesses.find((b) => b.id === selectedProcessId), [businessProcesses, selectedProcessId]);
 
-  const createSop = useCallback((title: string, format: SOPFormat, owner: string, steps?: SOPStep[]) => {
+  const createSop = useCallback((title: string, format: SOPFormat, owner: string, businessProcessId?: string, steps?: SOPStep[]) => {
     const id = generateId();
     const now = new Date().toISOString().split("T")[0];
     const defaultSteps: SOPStep[] = format === "block"
@@ -150,11 +158,11 @@ export function SOPProvider({ children, departmentId }: { children: React.ReactN
       currentVersion: "v0.1", status: "Draft", effectiveDate: null, createdAt: now,
       steps: steps && steps.length > 0 ? steps : defaultSteps,
       versions: [{ version: "v0.1", createdAt: now, createdBy: owner, status: "Draft", steps: [] }],
-      businessProcessId: selectedProcessId || undefined,
+      businessProcessId: businessProcessId || undefined,
     };
     setSops((prev) => [newSop, ...prev]);
     return id;
-  }, [selectedProcessId]);
+  }, []);
 
   const updateSop = useCallback((id: string, updates: Partial<SOPRecord>) => {
     setSops((prev) => prev.map((s) => (s.id === id ? { ...s, ...updates } : s)));
@@ -236,12 +244,12 @@ export function SOPProvider({ children, departmentId }: { children: React.ReactN
   const navigateToEdit = useCallback((id: string) => { setSelectedSopId(id); setCurrentView("edit"); }, []);
   const navigateToView = useCallback((id: string) => { setSelectedSopId(id); setCurrentView("view"); }, []);
   const navigateToList = useCallback(() => { setSelectedSopId(null); setCurrentView("list"); }, []);
-  const navigateToProcesses = useCallback(() => { setSelectedSopId(null); setSelectedProcessId(null); setCurrentView("processes"); }, []);
+  const navigateToProcesses = useCallback(() => { setSelectedSopId(null); setSelectedProcessId(null); setCurrentView("list"); }, []);
   const navigateToProcessSops = useCallback((processId: string) => { setSelectedProcessId(processId); setCurrentView("list"); }, []);
 
   return (
     <SOPContext.Provider value={{
-      sops, businessProcesses, currentView, selectedSopId, selectedProcessId,
+      sops: departmentSops, businessProcesses, currentView, selectedSopId, selectedProcessId,
       setCurrentView, selectSop, createSop, updateSop, deleteSop, transitionStatus,
       createNewVersion, addStep, updateStep, removeStep, reorderSteps,
       getSelectedSop, getSelectedProcess,

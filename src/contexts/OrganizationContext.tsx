@@ -38,20 +38,20 @@ const INITIAL_ROLES: OrgRole[] = [
 
   /* Managerial tier — Consulted/Accountable roles that translate strategy to plans */
   { id: "ROLE-0004", name: "Senior Manager", description: "Manages cross-functional teams and departmental objectives", tierId: "managerial", raciType: "accountable", createdAt: "2025-06-01" },
-  { id: "ROLE-0005", name: "Maintenance Manager", description: "Plans and oversees preventive and corrective maintenance programs", tierId: "managerial", raciType: "accountable", createdAt: "2025-06-01" },
-  { id: "ROLE-0006", name: "HR Manager", description: "Manages recruitment, onboarding, training, and employee relations", tierId: "managerial", raciType: "accountable", createdAt: "2025-06-01" },
-  { id: "ROLE-0007", name: "Compliance Lead", description: "Ensures regulatory compliance and coordinates audits", tierId: "managerial", raciType: "consulted", createdAt: "2025-06-01" },
-  { id: "ROLE-0008", name: "QC Lead", description: "Leads quality control processes and inspection standards", tierId: "managerial", raciType: "accountable", createdAt: "2025-06-01" },
-  { id: "ROLE-0009", name: "Logistics Coordinator", description: "Coordinates inbound/outbound logistics and warehouse operations", tierId: "managerial", raciType: "consulted", createdAt: "2025-06-01" },
-  { id: "ROLE-0010", name: "IT Manager", description: "Manages day-to-day IT operations and help desk", tierId: "managerial", raciType: "accountable", createdAt: "2025-06-01" },
+  { id: "ROLE-0005", name: "Maintenance Manager", description: "Plans and oversees preventive and corrective maintenance programs", tierId: "managerial", departmentId: "DEP-0001", raciType: "accountable", createdAt: "2025-06-01" },
+  { id: "ROLE-0006", name: "HR Manager", description: "Manages recruitment, onboarding, training, and employee relations", tierId: "managerial", departmentId: "DEP-0004", raciType: "accountable", createdAt: "2025-06-01" },
+  { id: "ROLE-0007", name: "Compliance Lead", description: "Ensures regulatory compliance and coordinates audits", tierId: "managerial", departmentId: "DEP-0003", raciType: "consulted", createdAt: "2025-06-01" },
+  { id: "ROLE-0008", name: "QC Lead", description: "Leads quality control processes and inspection standards", tierId: "managerial", departmentId: "DEP-0003", raciType: "accountable", createdAt: "2025-06-01" },
+  { id: "ROLE-0009", name: "Logistics Coordinator", description: "Coordinates inbound/outbound logistics and warehouse operations", tierId: "managerial", departmentId: "DEP-0001", raciType: "consulted", createdAt: "2025-06-01" },
+  { id: "ROLE-0010", name: "IT Manager", description: "Manages day-to-day IT operations and help desk", tierId: "managerial", departmentId: "DEP-0002", raciType: "accountable", createdAt: "2025-06-01" },
 
   /* Operational tier — Responsible roles that execute daily work */
-  { id: "ROLE-0011", name: "Maintenance Technician", description: "Performs hands-on preventive and corrective maintenance tasks", tierId: "operational", raciType: "responsible", createdAt: "2025-06-01" },
-  { id: "ROLE-0012", name: "Senior Technician", description: "Handles complex repairs and mentors junior technicians", tierId: "operational", raciType: "responsible", createdAt: "2025-06-01" },
-  { id: "ROLE-0013", name: "Facility Supervisor", description: "Supervises daily facility cleaning and hygiene operations", tierId: "operational", raciType: "responsible", createdAt: "2025-06-01" },
-  { id: "ROLE-0014", name: "QC Inspector", description: "Inspects incoming materials and in-process quality checks", tierId: "operational", raciType: "responsible", createdAt: "2025-06-01" },
-  { id: "ROLE-0015", name: "HSE Officer", description: "Implements workplace safety protocols and incident response", tierId: "operational", raciType: "responsible", createdAt: "2025-06-01" },
-  { id: "ROLE-0016", name: "System Administrator", description: "Manages system backups, server administration, and disaster recovery", tierId: "operational", raciType: "responsible", createdAt: "2025-06-01" },
+  { id: "ROLE-0011", name: "Maintenance Technician", description: "Performs hands-on preventive and corrective maintenance tasks", tierId: "operational", departmentId: "DEP-0001", raciType: "responsible", createdAt: "2025-06-01" },
+  { id: "ROLE-0012", name: "Senior Technician", description: "Handles complex repairs and mentors junior technicians", tierId: "operational", departmentId: "DEP-0001", raciType: "responsible", createdAt: "2025-06-01" },
+  { id: "ROLE-0013", name: "Facility Supervisor", description: "Supervises daily facility cleaning and hygiene operations", tierId: "operational", departmentId: "DEP-0001", raciType: "responsible", createdAt: "2025-06-01" },
+  { id: "ROLE-0014", name: "QC Inspector", description: "Inspects incoming materials and in-process quality checks", tierId: "operational", departmentId: "DEP-0003", raciType: "responsible", createdAt: "2025-06-01" },
+  { id: "ROLE-0015", name: "HSE Officer", description: "Implements workplace safety protocols and incident response", tierId: "operational", departmentId: "DEP-0003", raciType: "responsible", createdAt: "2025-06-01" },
+  { id: "ROLE-0016", name: "System Administrator", description: "Manages system backups, server administration, and disaster recovery", tierId: "operational", departmentId: "DEP-0002", raciType: "responsible", createdAt: "2025-06-01" },
 ];
 
 /** Seed departments referencing role names as head-of-department. */
